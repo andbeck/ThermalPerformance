@@ -27,7 +27,8 @@ ggplot(pred_only, aes(x = Temperature, y = Growth0,
   facet_grid(Experiment~Clone)+
   scale_x_continuous(breaks = c(13,16,20,24,28))+
   scale_colour_brewer(palette = "RdYlBu", direction = -1)+
-  theme_bw(base_size = 15)+
+  ylab("Somatic Growth Rate (mm/day)")+
+  theme_grey(base_size = 15)+
   theme(axis.text.x = element_text(angle = 45,vjust = 0.5))+
   guides(color=guide_legend(title="Temp C˚")) 
 
@@ -44,7 +45,7 @@ ggplot(pred_only, aes(x = Temperature, y = maxInduction,
   scale_x_continuous(breaks = c(13,16,20,24,28))+
   scale_colour_brewer(palette = "RdYlBu", direction = -1)+
   labs(x = "Temperature (C˚)", y = "Induction Score")+
-  theme_bw(base_size = 15)+
+  theme_grey(base_size = 15)+
   theme(axis.text.x = element_text(angle = 45,vjust = 0.5))+
   guides(color=guide_legend(title="Temp C˚")) 
 
@@ -53,13 +54,13 @@ ggplot(pred_only, aes(x = Temperature, y = maxInduction,
 # mostly negative, with some clones constrained by not inducing
 # hint of acclimation-acute change
 ggplot(pred_only, aes(x = Growth0, y = maxInduction))+
-  geom_smooth(aes(x = Growth1, y = maxInduction), method = lm, se=F,
+  geom_smooth(aes(x = Growth0, y = maxInduction), method = lm, se=F,
               colour = 'grey70')+
   geom_jitter(aes(group = Temperature, colour = factor(Temperature)), 
-              size = 2, width = 0.01, height = 1)+
+              size = 2, width = 0.1, height = 1)+
   scale_colour_brewer(palette = "RdYlBu", direction = -1)+
   facet_grid(Experiment~Clone)+
-  theme_bw(base_size = 15)+
+  theme_grey(base_size = 15)+
   theme(axis.text.x = element_text(angle = 45))+
   guides(color=guide_legend(title="Temp C˚")) 
 
@@ -98,7 +99,7 @@ ggplot(G0, aes(x = meanSGR, y = meanInd,
   scale_colour_brewer(palette = "RdYlBu", direction = -1)+
   geom_smooth(method = lm, se=FALSE, size = 2)+
   facet_grid(Experiment ~ Temperature)+ 
-  guides(color=guide_legend(title="Temp C˚")) 
+  guides(color=guide_legend(title="Temp C˚"))
 
 
 
