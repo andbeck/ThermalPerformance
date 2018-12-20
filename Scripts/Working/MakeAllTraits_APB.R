@@ -4,6 +4,7 @@
 # SGR calculated as linear regression on log Body Size from Intial to Final Juvenile Instar
 # Fec calcuated as sum of the number of neonates
 # Induction calcuated as max induction
+# NO SCALING because 0 matters to TPC.
 
 #libraries
 library(tidyverse)
@@ -32,8 +33,7 @@ SGR_scale <- SGR %>%
   group_by(ID, Clone, Temperature, Treatment, Experiment) %>% 
   nest() %>% 
   mutate(model = map(.x = data , .f = ~lm(log.Body ~ Age, data = .))) %>% 
-  mutate(GR = map_dbl(.x = model, .f = ~coef(.)[2])) %>% 
-  mutate(GR = scale(GR))
+  mutate(GR = map_dbl(.x = model, .f = ~coef(.)[2]))
 
 # Fecundity Data ----
 
@@ -46,9 +46,7 @@ Fec_scale <- hebe_all %>%
   filter(Mature == "A"&No.Neonates>=1) %>% 
   group_by(ID, Clone, Temperature, Treatment, Experiment) %>% 
   mutate(Fec = sum(No.Neonates, na.rm = TRUE)) %>%
-  select(Clone, Temperature, Treatment, Experiment, Fec) %>% 
-  ungroup() %>% 
-  mutate(Fec = scale(Fec))
+  select(Clone, Temperature, Treatment, Experiment, Fec)
 
 # Induction Data
 maxInd_scale <- hebe_all %>%
@@ -62,9 +60,7 @@ maxInd_scale <- hebe_all %>%
   mutate(IndScore = Spikes*10 + Pedestal) %>% 
   group_by(ID, Clone, Temperature, Treatment, Experiment) %>% 
   mutate(maxInd = max(IndScore)) %>% 
-  select(Clone, Temperature, Treatment, Experiment, maxInd) %>% 
-  ungroup() %>% 
-  mutate(maxInd = scale(maxInd))
+  select(Clone, Temperature, Treatment, Experiment, maxInd)
 
 
 # Initial Plots of three traits by temperature ----
