@@ -14,6 +14,8 @@ hebe_all <- read_csv("./Data/AllResults_18_07_18.csv")
 
 # Make the trait data ----
 
+hebe_all %>% filter()
+
 # Somatic Growth Data ----
 SGR <- hebe_all %>% 
   filter(Clone != "D10_74", Clone != "LD35", Clone != "LD34") %>% 
@@ -24,7 +26,8 @@ SGR <- hebe_all %>%
   filter(Mature == "J") %>% 
   select(ID, Clone, Temperature, Treatment, Experiment, Age, Body) %>% 
   mutate(log.Body = log(Body)) %>% 
-  na.omit()
+  na.omit() %>% 
+  distinct()
 
 unique(SGR$Clone)
 
@@ -38,7 +41,7 @@ SGR_scale <- SGR %>%
 # Fecundity Data ----
 
 Fec_scale <- hebe_all %>% 
-  filter(Clone != "D10_74", Clone != "LD35", Clone != "LD34", Clone != "D10_74") %>% 
+  filter(Clone != "D10_74", Clone != "LD35", Clone != "LD34") %>% 
   mutate(Experiment = case_when(
     Experiment == "Acute" ~ "Acute",
     Experiment == "Aclim" ~ "Acclim",
@@ -46,7 +49,8 @@ Fec_scale <- hebe_all %>%
   filter(Mature == "A"&No.Neonates>=1) %>% 
   group_by(ID, Clone, Temperature, Treatment, Experiment) %>% 
   mutate(Fec = sum(No.Neonates, na.rm = TRUE)) %>%
-  select(Clone, Temperature, Treatment, Experiment, Fec)
+  select(Clone, Temperature, Treatment, Experiment, Fec) %>% 
+  distinct()
 
 # Induction Data
 maxInd_scale <- hebe_all %>%
@@ -60,7 +64,8 @@ maxInd_scale <- hebe_all %>%
   mutate(IndScore = Spikes*10 + Pedestal) %>% 
   group_by(ID, Clone, Temperature, Treatment, Experiment) %>% 
   mutate(maxInd = max(IndScore)) %>% 
-  select(Clone, Temperature, Treatment, Experiment, maxInd)
+  select(Clone, Temperature, Treatment, Experiment, maxInd) %>% 
+  distinct()
 
 
 # Initial Plots of three traits by temperature ----
