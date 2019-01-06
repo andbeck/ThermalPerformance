@@ -1,9 +1,5 @@
 library(tidyverse)
-library(splines)
 library(lme4)
-#devtools::install_github('ZheyuanLi/SplinesUtils')
-library(SplinesUtils)
-library(broom)
 library(car)
 library(heplots)
 library(MESS)
@@ -35,9 +31,11 @@ scaleDat <- Ro %>% as.data.frame() %>%
 # first plot of scaled data
 ggplot(scaleDat, aes(x = Temperature, y = Ro, 
                      colour = Treatment))+
-  geom_point()+
+  geom_jitter()+
   geom_smooth(method = lm, formula = y ~ poly(x,2), se = FALSE)+
   facet_grid(Experiment ~ Clone)+
+  ylab(expression(paste("Reproduction (", Sigma, "lxmx)")))+
+  scale_colour_manual(values = c(Control = "black", Predator = "red"))+
   theme_bw()
 
 #Acute Screws up reproduction!
@@ -59,16 +57,16 @@ ggplot(scaleDat, aes(x = Temperature, y = Ro, group = Experiment))+
 # bs(Temperature)|Clone justified
 # bs(Temeprature) + Experiment NO
 # bs(Temeprature) + Experiment + Treatment No
-
+# library(splines)
 # mod <- lmer(Ro ~ bs(Temperature) * Treatment * Experiment +
-#               (bs(Temperature)|Clone),
-#             data = scaleDat)
+#                (bs(Temperature)|Clone),
+#              data = scaleDat)
 
 # NOTE that bs() function for Acute group creates VERY awkward shape
 # poly(T,3) produces same as bs() - dafulting to knots 3, clearly
 # result is the same though (qual) as the peack performance is at v. low temps
 mod <- lmer(Ro ~ poly(Temperature, 2) * Treatment * Experiment +
-              (poly(Temperature, 2)|Clone),
+              (1|Clone),
             data = scaleDat)
 
 summary(mod)
