@@ -54,8 +54,8 @@ ggplot(pred_only, aes(x = Temperature, y = maxInduction,
 # Trade-off vs. temperature (Raw Data) ----
 # mostly negative, with some clones constrained by not inducing
 # hint of acclimation-acute change
-ggplot(pred_only, aes(y = Growth0, x = maxInduction))+
-  geom_smooth(aes(y = Growth0, x = maxInduction), method = lm, se=F,
+ggplot(pred_only, aes(x = Growth0, y = maxInduction))+
+  geom_smooth(aes(x = Growth0, y = maxInduction), method = lm, se=F,
               colour = 'grey70')+
   geom_jitter(aes(group = Temperature, colour = factor(Temperature)), 
               size = 2, width = 0.1, height = 1)+
@@ -128,6 +128,8 @@ modTradeOffGE <- lmer(maxInduction ~ Growth0*Temperature*Experiment+
                       (Growth0+Experiment|Clone), data = scaleDat)
 modTradeOffG <- lmer(maxInduction ~ Growth0*Temperature*Experiment+
                       (Growth0|Clone), data = scaleDat)
+modTradeOff_N <- lmer(maxInduction ~ Growth0*Temperature*Experiment+
+                       (1|Clone), data = scaleDat)
 
 anova(modTradeOff, modTradeOffGE) # T not justified backwards
 anova(modTradeOff, modTradeOffGT) # E justified
@@ -135,8 +137,11 @@ anova(modTradeOff, modTradeOffGT) # E justified
 anova(modTradeOffGT, modTradeOffG) # T not justified forward
 anova(modTradeOffGE, modTradeOffG) # E justified forward
 
+anova(modTradeOffG, modTradeOff_N)
+
 Anova(modTradeOffG, test.statistic = "F")
 summary(modTradeOffG)
+confint(modTradeOffG)
 
 # prep plot lmer  Result 
 
@@ -148,9 +153,9 @@ newX <- expand.grid(
   Experiment = unique(pred_only$Experiment),
   Clone = unique(pred_only$Clone))
 
-fixed_pred <- predict(modTradeOffGE, newdata = newX, re.form = NA)
-clone_pred <- predict(modTradeOffGE, newdata = newX, 
-                      re.form = ~(Growth0+Experiment|Clone))
+fixed_pred <- predict(modTradeOffG, newdata = newX, re.form = NA)
+clone_pred <- predict(modTradeOffG, newdata = newX, 
+                      re.form = ~(Growth0|Clone))
 
 pd <- data.frame(newX, fixed_pred, clone_pred) %>% 
   mutate(Experiment = factor(Experiment, levels = c("Acclim","Acute")))
