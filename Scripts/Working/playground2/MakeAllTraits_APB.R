@@ -14,30 +14,6 @@ hebe_all <- read_csv("./Data/AllResults_18_07_18.csv")
 
 # Make the trait data ----
 
-hebe_all %>% filter()
-
-# Somatic Growth Data ----
-SGR <- hebe_all %>% 
-  filter(Clone != "D10_74", Clone != "LD35", Clone != "LD34") %>% 
-  mutate(Experiment = case_when(
-    Experiment == "Acute" ~ "Acute",
-    Experiment == "Aclim" ~ "Acclim",
-    Experiment == "Acclim" ~ "Acclim")) %>% 
-  filter(Mature == "J") %>% 
-  select(ID, Clone, Temperature, Treatment, Experiment, Age, Body) %>% 
-  mutate(log.Body = log(Body)) %>% 
-  na.omit() %>% 
-  distinct()
-
-unique(SGR$Clone)
-
-# calculate GR
-SGR_scale <- SGR %>%  
-  group_by(ID, Clone, Temperature, Treatment, Experiment) %>% 
-  nest() %>% 
-  mutate(model = map(.x = data , .f = ~lm(log.Body ~ Age, data = .))) %>% 
-  mutate(GR = map_dbl(.x = model, .f = ~coef(.)[2]))
-
 # Fecundity Data ----
 
 Fec_scale <- hebe_all %>% 
@@ -52,24 +28,35 @@ Fec_scale <- hebe_all %>%
   select(Clone, Temperature, Treatment, Experiment, Fec) %>% 
   distinct()
 
-# Induction Data
-maxInd_scale <- hebe_all %>%
-  filter(Clone != "D10_74", Clone != "LD35", Clone != "LD34") %>% 
-  mutate(Experiment = case_when(
-    Experiment == "Acute" ~ "Acute",
-    Experiment == "Aclim" ~ "Acclim",
-    Experiment == "Acclim" ~ "Acclim")) %>% 
-  filter(Mature == "J") %>% 
-  select(ID, Clone, Temperature, Treatment, Experiment, Spikes, Pedestal) %>% 
-  mutate(IndScore = Spikes*10 + Pedestal) %>% 
-  group_by(ID, Clone, Temperature, Treatment, Experiment) %>% 
-  mutate(maxInd = max(IndScore)) %>% 
-  select(Clone, Temperature, Treatment, Experiment, maxInd) %>% 
-  distinct()
+# data
+SGR_Ind <- read_csv("./Data/growthInd_HC0.csv")
+
+# Create a scaled dataset and a response one with Factorial ----------------------------
+# Omit D10_A13 because so much missing
+
+SGR_scale <- SGR_Ind %>% as.data.frame() %>% 
+  filter(Clone != "D10_A13") %>% 
+  mutate(maxInduction = scale(maxInduction),
+         Growth0 = scale(Growth0),
+         Growth1 = scale(Growth1),
+         factorial = paste(Experiment, Treatment, Clone, sep = ":")) %>% 
+  na.omit() %>% 
+  data.frame()
+
+# scaleDat %>% 
+#   group_by(Temperature,Experiment, Treatment, Clone) %>% 
+#   summarise(count = sum(!is.na(Growth0))) %>% 
+#   filter(count == 1)
+
+maxInd_scale <- SGR_Ind %>% as.data.frame() %>% 
+  mutate(maxInd = scale(maxInduction),
+         factorial = paste(Experiment, Treatment, Clone, sep = ":")) %>% 
+  na.omit() %>% 
+  data.frame()
 
 
 # Initial Plots of three traits by temperature ----
-p_Gr <- ggplot(SGR_scale, aes(x = Temperature, y = GR,
+p_Gr <- ggplot(SGR_scale, aes(x = Temperature, y = Growth0,
                               colour = Treatment))+
   geom_point()+
   geom_smooth(method = lm, formula = y ~ poly(x, 2), se = FALSE)+

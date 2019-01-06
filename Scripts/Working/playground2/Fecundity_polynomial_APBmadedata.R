@@ -34,7 +34,7 @@ p_Fec # the plot
 
 # Effect of Temp varies by treatment and by Experiment
 # Effect of Treatment does not vary by Experiment (Predation effect is invariant)
-mod <- lmer(Fec ~ (poly(Temperature,2)+Treatment+Experiment)^2 + 
+mod <- lmer(Fec ~ (poly(Temperature,2)+Treatment+Experiment)^3 + 
               (poly(Temperature,2)|Clone), 
             data = Fec_scale)
 
