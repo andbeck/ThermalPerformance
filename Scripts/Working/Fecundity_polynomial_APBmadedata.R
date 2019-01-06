@@ -22,7 +22,7 @@ library(MESS)
 # it will produce a plot of all three traits
 # takes a few seconds.
 
-source("./Scripts/Working/MakeAllTraits_APB.R")
+source("./Scripts/Working/MakeFecData_APB.R")
 
 ## Fecundity Analyses ----
 
