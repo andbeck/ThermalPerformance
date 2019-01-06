@@ -36,6 +36,7 @@ ggplot(pred_only, aes(x = Temperature, y = Growth0,
 
 # Fig 2 Induction Declines or flat with temperature ---------
 # Acclim/Acute alterns means
+
 ggplot(pred_only, aes(x = Temperature, y = maxInduction, 
                       colour = factor(Temperature),
                       group = Clone))+
@@ -53,8 +54,8 @@ ggplot(pred_only, aes(x = Temperature, y = maxInduction,
 # Trade-off vs. temperature (Raw Data) ----
 # mostly negative, with some clones constrained by not inducing
 # hint of acclimation-acute change
-ggplot(pred_only, aes(x = Growth0, y = maxInduction))+
-  geom_smooth(aes(x = Growth0, y = maxInduction), method = lm, se=F,
+ggplot(pred_only, aes(y = Growth0, x = maxInduction))+
+  geom_smooth(aes(y = Growth0, x = maxInduction), method = lm, se=F,
               colour = 'grey70')+
   geom_jitter(aes(group = Temperature, colour = factor(Temperature)), 
               size = 2, width = 0.1, height = 1)+
@@ -134,8 +135,8 @@ anova(modTradeOff, modTradeOffGT) # E justified
 anova(modTradeOffGT, modTradeOffG) # T not justified forward
 anova(modTradeOffGE, modTradeOffG) # E justified forward
 
-Anova(modTradeOff, test.statistic = "F")
-summary(modTradeOff)
+Anova(modTradeOffG, test.statistic = "F")
+summary(modTradeOffG)
 
 # prep plot lmer  Result 
 
@@ -145,15 +146,14 @@ newX <- expand.grid(
                 length = 10),
   Temperature = unique(pred_only$Temperature),
   Experiment = unique(pred_only$Experiment),
-    Clone = unique(pred_only$Clone)
-)
+  Clone = unique(pred_only$Clone))
 
 fixed_pred <- predict(modTradeOffGE, newdata = newX, re.form = NA)
 clone_pred <- predict(modTradeOffGE, newdata = newX, 
                       re.form = ~(Growth0+Experiment|Clone))
 
 pd <- data.frame(newX, fixed_pred, clone_pred) %>% 
-  mutate(Experiment = factor(Experiment, levels = c("Acute","Acclim")))
+  mutate(Experiment = factor(Experiment, levels = c("Acclim","Acute")))
 
 # lmer model Plot 
 lmerFixed <- ggplot(pd, aes(x = Growth0, y = fixed_pred, 
