@@ -99,6 +99,14 @@ ggplot(pd, aes(x = Temperature, y = fixed_pred))+
   theme_bw(base_size = 15)+
   theme(legend.position = "none")
 
+# align with theory picture
+ggplot(pd, aes(x = Temperature, y = fixed_pred, colour = Treatment,
+               linetype = Experiment))+
+  geom_line(size = 2)+
+  scale_colour_manual(values = c(Control = "black", Predator = "red"))+
+  labs(y ="Somatic Growth Rate (mm/day)")+
+  theme_bw(base_size = 15)
+
 ## AUC and Popt/Topt analysis ----
 
 # calcuate area under the curves ----

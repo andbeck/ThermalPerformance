@@ -17,9 +17,8 @@ library(MESS)
 
 ## Source the Trait making script ----
 
-# this will make three traits: Growth Rate, Fecundity and max Induction
-# all traits are scaled.
-# it will produce a plot of all three traits
+# this will make the fecundity data
+# it will produce a plot too
 # takes a few seconds.
 
 source("./Scripts/Working/MakeFecData_APB.R")
@@ -82,6 +81,15 @@ ggplot(pd, aes(x = Temperature, y = fixed_pred))+
   labs(y =expression(paste("Fecundity (", Sigma, "3-clutches)")))+
   theme_bw(base_size = 15)+
   theme(legend.position = "none")
+
+# align with theory picture
+ggplot(pd, aes(x = Temperature, y = fixed_pred, colour = Treatment,
+               linetype = Experiment))+
+  geom_line(size = 2)+
+  scale_colour_manual(values = c(Control = "black", Predator = "red"))+
+  labs(y =expression(paste("Fecundity (", Sigma, "3-clutches)")))+
+  theme_bw(base_size = 15)
+
 
 ## AUC and Popt/Topt analysis ----
 
