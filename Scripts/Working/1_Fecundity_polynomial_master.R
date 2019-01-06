@@ -30,6 +30,15 @@ source("./Scripts/Working/MakeFecData_APB.R")
 glimpse(Fec_scale)
 p_Fec # the plot
 
+ggplot(Fec_scale, aes(x = Temperature, y = Fec, 
+                     colour = Treatment))+
+  geom_point()+
+  geom_smooth(method = lm, formula = y ~ poly(x,2), se = FALSE)+
+  facet_grid(Experiment ~ Clone)+
+  scale_colour_manual(values = c(Control = "black", Predator = "red"))+
+  ylab(expression(paste("Fecundity (", Sigma, "3-clutches)")))+
+  theme_bw()
+
 # The model ----
 
 # Effect of Temp varies by treatment and by Experiment
@@ -70,7 +79,7 @@ ggplot(pd, aes(x = Temperature, y = fixed_pred))+
   # geom_jitter(data = Ro, aes(x = Temperature, y = Ro.B2, colour = Clone), alpha = 0.3,
   #             height = 0, width = 1)+
   facet_grid(Experiment ~ Treatment)+
-  labs(y =expression(paste("Fecundity ", Sigma, "3-clutches")))+
+  labs(y =expression(paste("Fecundity (", Sigma, "3-clutches)")))+
   theme_bw(base_size = 15)+
   theme(legend.position = "none")
 
@@ -98,12 +107,14 @@ AUCsum <- AUC %>% group_by(Treatment, Experiment) %>%
             seAUC = sd(AUC)/sqrt(sum(!is.na(AUC))))
 
 # GRAPH AUC: predation increases the AUC ----
-ggplot(AUCsum, aes(x = Treatment, y = meanAUC, ymin = meanAUC - seAUC, ymax = meanAUC + seAUC,
-                   colour = Experiment, group = Experiment))+
+ggplot(AUCsum, aes(x = Experiment, y = meanAUC, ymin = meanAUC - seAUC, ymax = meanAUC + seAUC,
+                   colour = Treatment, group = Treatment))+
   geom_point(size = 5,position = position_dodge(0.25))+
   geom_line(position = position_dodge(0.25))+
   geom_errorbar(width = 0.1, position = position_dodge(0.25))+
-  theme_bw(base_size = 25)
+  scale_colour_manual(values = c(Control = "black", Predator = "red"))+
+  ylab("AUC Fecundity")+
+  theme_bw(base_size = 15)
 
 # MODEL AUC ----
 # Suggestive of Fast - Slow model

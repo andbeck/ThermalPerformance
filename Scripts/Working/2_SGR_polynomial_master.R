@@ -45,6 +45,8 @@ ggplot(scaleDat, aes(x = Temperature, y = Growth0,
   geom_point()+
   geom_smooth(method = lm, formula = y ~ poly(x,2), se = FALSE)+
   facet_grid(Experiment ~ Clone)+
+  scale_colour_manual(values = c(Control = "black", Predator = "red"))+
+  ylab("Somatic Growth Rate (mm/day)")+
   theme_bw()
 
 ggplot(scaleDat, aes(x = Temperature, y = Growth0, group = Experiment))+
@@ -93,7 +95,7 @@ ggplot(pd, aes(x = Temperature, y = fixed_pred))+
   # geom_jitter(data = Ro, aes(x = Temperature, y = Ro.B2, colour = Clone), alpha = 0.3,
   #             height = 0, width = 1)+
   facet_grid(Experiment ~ Treatment)+
-  labs(y =expression(paste("Fecundity ", Sigma, "3-clutches")))+
+  labs(y = "Somatic Growth Rate (mm/day)")+
   theme_bw(base_size = 15)+
   theme(legend.position = "none")
 
@@ -108,12 +110,14 @@ AUCsum <- AUC %>% group_by(Treatment, Experiment) %>%
             seAUC = sd(AUC)/sqrt(sum(!is.na(AUC))))
 
 # GRAPH AUC: predation increases the AUC ----
-ggplot(AUCsum, aes(x = Treatment, y = meanAUC, ymin = meanAUC - seAUC, ymax = meanAUC + seAUC,
-                   colour = Experiment, group = Experiment))+
+ggplot(AUCsum, aes(x = Experiment, y = meanAUC, ymin = meanAUC - seAUC, ymax = meanAUC + seAUC,
+                   colour = Treatment, group = Treatment))+
   geom_point(size = 5,position = position_dodge(0.25))+
   geom_line(position = position_dodge(0.25))+
   geom_errorbar(width = 0.1, position = position_dodge(0.25))+
-  theme_bw(base_size = 25)
+  scale_colour_manual(values = c(Control = "black", Predator = "red"))+
+  ylab("AUC Somatic Growth")+
+  theme_bw(base_size = 15)
 
 # MODEL AUC ----
 aucMod <- lm(AUC ~ Treatment * Experiment, data = AUC)

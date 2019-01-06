@@ -1,9 +1,5 @@
 library(tidyverse)
-library(splines)
 library(lme4)
-#devtools::install_github('ZheyuanLi/SplinesUtils')
-library(SplinesUtils)
-library(broom)
 library(car)
 library(heplots)
 library(MESS)
@@ -28,9 +24,11 @@ scaleDat %>%
 # first plot of scaled data
 ggplot(scaleDat, aes(x = Temperature, y = maxInduction, 
                      colour = Treatment))+
-  geom_point()+
+  geom_jitter()+
   geom_smooth(method = lm, se = FALSE)+
   facet_grid(Experiment ~ Clone)+
+  scale_colour_manual(values = c(Control = "black", Predator = "red"))+
+  ylab("Induction Score (Scaled)")+
   theme_bw()
 
 ggplot(scaleDat, aes(x = Temperature, y = maxInduction, group = Experiment))+
@@ -44,8 +42,14 @@ ggplot(scaleDat, aes(x = Temperature, y = maxInduction, group = Experiment))+
 # Model --------------------------------
 # FULL random effects structure justified by LRT
 mod <- lmer(maxInduction ~ Temperature * Treatment * Experiment +
-              (Temperature+Treatment+Experiment|Clone),
+              (Temperature|Clone),
             data = scaleDat)
+
+# mod <- lmer(maxInduction ~ Temperature * Treatment * Experiment +
+#               (Temperature+Treatment+Experiment|Clone),
+#             data = scaleDat)
+
+# anova(mod, mod2)
 
 summary(mod)
 Anova(mod, test.statistic = "F")
@@ -60,27 +64,23 @@ newX <- expand.grid(
   Clone = unique(scaleDat$Clone)
 )
 
-# predictions at level 1 (all Random Effects)
-pred_full <- predict(mod, newdata = newX)
-pred_fix <- predict(mod, newdata = newX, re.form = NA)
+# predicted Fecundities
+fixed_pred <- predict(mod, newdata = newX,re.form = NA)
+clone_pred <- predict(mod, newdata = newX, re.form = ~Temperature|Clone)
 
 # housekeeping
-predDat <- data.frame(newX, pred_full, pred_fix)
+pd <- data.frame(newX, fixed_pred, clone_pred) %>% 
+  mutate(Experiment = factor(Experiment, levels = c("Acclim", "Acute")))
 
-# BUILD AND VISUALISE  EFFECTS VIEW ====================================
-
-# visualise FIXED responses
-ggplot(predDat, aes(x = Temperature, y = pred_fix,
-                    group = Treatment, colour = Treatment))+
+# graph the curves Fecundity
+ggplot(pd, aes(x = Temperature, y = fixed_pred))+
   geom_line(size = 2)+
-  labs(y = "max Induction Score")+
-  scale_colour_manual(values = c(Control = "Black", Predator = "Red"))+
-  facet_wrap(~Experiment, ncol = 2)+
-  theme_bw(base_size = 15)
+  geom_line(aes(x = Temperature, y = clone_pred, colour = Clone), 
+            size = 1, alpha = 0.5)+
+  # geom_jitter(data = Ro, aes(x = Temperature, y = Ro.B2, colour = Clone), alpha = 0.3,
+  #             height = 0, width = 1)+
+  facet_grid(Experiment ~ Treatment)+
+  labs(y ="Induction Score (Scaled)")+
+  theme_bw(base_size = 15)+
+  theme(legend.position = "none")
 
-# with RE
-ggplot(predDat, aes(x = Temperature, y = pred_full, 
-                    group = Clone, colour = Clone))+
-  geom_line()+
-  geom_line(aes(x = Temperature, y = pred_fix), colour = "grey20")+
-  facet_grid(Treatment ~ Experiment)
