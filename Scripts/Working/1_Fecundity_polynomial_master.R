@@ -61,13 +61,26 @@ newX <- expand.grid(
   Clone = unique(Fec_scale$Clone)
 )
 
+# use with theory picture?
+# expanded temperature range
+newX2 <- expand.grid(
+  Temperature = seq(0,40,length = 100),
+  Treatment = unique(Fec_scale$Treatment),
+  Experiment = unique(Fec_scale$Experiment),
+  Clone = unique(Fec_scale$Clone)
+)
+
 # predicted Fecundities
 fixed_pred <- predict(mod, newdata = newX,re.form = NA)
+fixed_pred2 <- predict(mod, newdata = newX2, re.form = NA)
 clone_pred <- predict(mod, newdata = newX, 
                       re.form = ~(poly(Temperature,2)|Clone))
 
 # housekeeping
 pd <- data.frame(newX, fixed_pred, clone_pred) %>% 
+  mutate(Experiment = factor(Experiment, levels = c("Acclim", "Acute")))
+
+pd2 <-data.frame(newX2, fixed_pred, clone_pred) %>% 
   mutate(Experiment = factor(Experiment, levels = c("Acclim", "Acute")))
 
 # graph the curves Fecundity
@@ -83,7 +96,7 @@ ggplot(pd, aes(x = Temperature, y = fixed_pred))+
   theme(legend.position = "none")
 
 # align with theory picture
-ggplot(pd, aes(x = Temperature, y = fixed_pred, colour = Treatment,
+ggplot(pd2, aes(x = Temperature, y = fixed_pred, colour = Treatment,
                linetype = Experiment))+
   geom_line(size = 2)+
   scale_colour_manual(values = c(Control = "black", Predator = "red"))+
