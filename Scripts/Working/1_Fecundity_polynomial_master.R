@@ -64,7 +64,7 @@ newX <- expand.grid(
 # use with theory picture?
 # expanded temperature range
 newX2 <- expand.grid(
-  Temperature = seq(0,40,length = 100),
+  Temperature = seq(5,30,length = 100),
   Treatment = unique(Fec_scale$Treatment),
   Experiment = unique(Fec_scale$Experiment),
   Clone = unique(Fec_scale$Clone)
@@ -80,7 +80,7 @@ clone_pred <- predict(mod, newdata = newX,
 pd <- data.frame(newX, fixed_pred, clone_pred) %>% 
   mutate(Experiment = factor(Experiment, levels = c("Acclim", "Acute")))
 
-pd2 <-data.frame(newX2, fixed_pred, clone_pred) %>% 
+pd2 <-data.frame(newX2, fixed_pred2, clone_pred) %>% 
   mutate(Experiment = factor(Experiment, levels = c("Acclim", "Acute")))
 
 # graph the curves Fecundity
@@ -96,11 +96,17 @@ ggplot(pd, aes(x = Temperature, y = fixed_pred))+
   theme(legend.position = "none")
 
 # align with theory picture
-ggplot(pd2, aes(x = Temperature, y = fixed_pred, colour = Treatment,
+ggplot(pd2, aes(x = Temperature, y = fixed_pred2, colour = Treatment,
                linetype = Experiment))+
-  geom_line(size = 2)+
+  geom_line(size = 2, alpha = 0.3)+
+  geom_line(size = 2, data = pd, aes(x = Temperature, y = fixed_pred, colour = Treatment,
+                                     linetype = Experiment))+
+  geom_vline(xintercept = c(13,28), col = 'grey30')+
+  geom_hline(yintercept = 0, col = 'grey30')+
   scale_colour_manual(values = c(Control = "black", Predator = "red"))+
+  scale_linetype_manual(values = c(Acute = "dashed", Acclim = "solid"))+
   labs(y =expression(paste("Fecundity (", Sigma, "3-clutches)")))+
+  ylim(-1,30)+
   theme_bw(base_size = 15)
 
 
