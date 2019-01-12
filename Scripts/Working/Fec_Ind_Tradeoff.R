@@ -12,25 +12,47 @@ names(SGR_Ind)
 # Omit D10_A13 because so much missing
 
 scaleInd <- SGR_Ind %>% 
-  na.omit() %>% 
-  select(Clone, Temperature, Treatment, Experiment, maxInduction)
+  group_by(Clone, Temperature, Treatment, Experiment) %>% 
+  mutate(Rep = row_number()) %>% 
+  mutate(ID = paste(Rep, Clone, Temperature, Treatment, Experiment, sep = "-")) %>% 
+  select(ID, Clone, Temperature, Treatment, Experiment, maxInduction)
 
 # Fec Data
 source("./Scripts/Working/MakeFecData_APB.R")
 glimpse(Fec_scale)
 
-Fec_scale <- Fec_scale %>% 
-  select(Clone, Temperature, Treatment, Experiment, Fec)
+Fec_scale <- Fec_scale %>% ungroup() %>% 
+  select(Clone, Temperature, Treatment, Experiment, Fec) %>% 
+  group_by(Clone, Temperature, Treatment, Experiment) %>% 
+  mutate(Rep = row_number()) %>% 
+  mutate(ID = paste(Rep, Clone, Temperature, Treatment, Experiment, sep = "-")) %>% 
+  select(ID, Clone, Temperature, Treatment, Experiment, Fec)
+
 
 
 # look at the data
 glimpse(scaleInd)
-filter(scaleInd, Clone == "LD33", Treatment == "Control", Experiment == "Acute", Temperature == 13) %>% data.frame()
-glimpse(Fec_scale)
-filter(Fec_scale, Clone == "LD33", Treatment == "Control", Experiment == "Acute", Temperature == 13) %>% data.frame()
+tempInd <- filter(scaleInd, 
+       Clone == "LD33", 
+       Treatment == "Control", 
+       Experiment == "Acute", 
+       Temperature == 13) %>% data.frame()
 
-fec_ind <- left_join(scaleInd, Fec_scale)
+glimpse(Fec_scale)
+tempFec <- filter(Fec_scale, 
+       Clone == "LD33", 
+       Treatment == "Control", 
+       Experiment == "Acute", 
+       Temperature == 13) %>% data.frame()
+
+tempFec
+tempInd
+
+full_join(tempInd, tempFec)
+
+fec_ind <- full_join(scaleInd, Fec_scale)
 glimpse(fec_ind)
+
 filter(fec_ind, Clone == "LD33", Treatment == "Control", Experiment == "Acute", Temperature == 13)
 
 ggplot(fec_ind, aes(x = maxInduction, y = Fec))+
