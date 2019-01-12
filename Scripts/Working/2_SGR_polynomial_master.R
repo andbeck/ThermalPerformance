@@ -25,14 +25,21 @@ SGR_Ind <- read_csv("./Data/growthInd_HC0.csv")
 # Create a scaled dataset and a response one with Factorial ----------------------------
 # Omit D10_A13 because so much missing
 
+# scaleDat <- SGR_Ind %>% as.data.frame() %>% 
+#   filter(Clone != "D10_A13") %>% 
+#   mutate(maxInduction = scale(maxInduction),
+#          Growth0 = scale(Growth0),
+#          Growth1 = scale(Growth1),
+#          factorial = paste(Experiment, Treatment, Clone, sep = ":")) %>% 
+#   na.omit() %>% 
+#   data.frame()
+
 scaleDat <- SGR_Ind %>% as.data.frame() %>% 
   filter(Clone != "D10_A13") %>% 
-  mutate(maxInduction = scale(maxInduction),
-         Growth0 = scale(Growth0),
-         Growth1 = scale(Growth1),
-         factorial = paste(Experiment, Treatment, Clone, sep = ":")) %>% 
+  mutate(factorial = paste(Experiment, Treatment, Clone, sep = ":")) %>% 
   na.omit() %>% 
   data.frame()
+
 
 scaleDat %>% 
   group_by(Temperature,Experiment, Treatment, Clone) %>% 
@@ -78,8 +85,17 @@ newX <- expand.grid(
   Clone = unique(scaleDat$Clone)
 )
 
+# expanded temperature range
+newX2 <- expand.grid(
+  Temperature = seq(5,30,length = 100),
+  Treatment = unique(scaleDat$Treatment),
+  Experiment = unique(scaleDat$Experiment),
+  Clone = unique(scaleDat$Clone)
+)
+
 # predicted Fecundities
 fixed_pred <- predict(mod, newdata = newX,re.form = NA)
+fixed_pred2 <- predict(mod, newdata = newX2, re.form = NA)
 clone_pred <- predict(mod, newdata = newX, 
                       re.form = ~(poly(Temperature,2)|Clone))
 
@@ -87,6 +103,8 @@ clone_pred <- predict(mod, newdata = newX,
 pd <- data.frame(newX, fixed_pred, clone_pred) %>% 
   mutate(Experiment = factor(Experiment, levels = c("Acclim", "Acute")))
 
+pd2 <-data.frame(newX2, fixed_pred2, clone_pred) %>% 
+  mutate(Experiment = factor(Experiment, levels = c("Acclim", "Acute")))
 # graph the curves Fecundity
 ggplot(pd, aes(x = Temperature, y = fixed_pred))+
   geom_line(size = 2)+
@@ -100,11 +118,17 @@ ggplot(pd, aes(x = Temperature, y = fixed_pred))+
   theme(legend.position = "none")
 
 # align with theory picture
-ggplot(pd, aes(x = Temperature, y = fixed_pred, colour = Treatment,
-               linetype = Experiment))+
-  geom_line(size = 2)+
+ggplot(pd2, aes(x = Temperature, y = fixed_pred2, colour = Treatment,
+                linetype = Experiment))+
+  geom_line(size = 2, alpha = 0.3)+
+  geom_line(size = 2, data = pd, aes(x = Temperature, y = fixed_pred, colour = Treatment,
+                                     linetype = Experiment))+
+  geom_vline(xintercept = c(13,28), col = 'grey30')+
+  geom_hline(yintercept = 0, col = 'grey30')+
   scale_colour_manual(values = c(Control = "black", Predator = "red"))+
-  labs(y ="Somatic Growth Rate (mm/day)")+
+  scale_linetype_manual(values = c(Acute = "dotted", Acclim = "solid"))+
+  labs(y =expression(paste("Somatic Growth Rate")))+
+  ylim(-0.12,0.12)+
   theme_bw(base_size = 15)
 
 ## AUC and Popt/Topt analysis ----
