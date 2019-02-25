@@ -80,13 +80,24 @@ mean_SGR_Ind <- pred_only2 %>%
             meanSGR = mean(SGR, na.rm = TRUE))
 
 # plot all mean Inds ~ Growths (Raw Data Trade-offs) -----
-G0 <- filter(mean_SGR_Ind, G_Stage == "Growth0")
+G0 <- filter(mean_SGR_Ind, G_Stage == "Growth0") %>%
+  ungroup() %>% 
+  mutate(Temperature = factor(Temperature))
 
 # Panel by Experiment, regression among clones
-ggplot(G0, aes(x = meanSGR, y = meanInd, 
-                         group = Temperature, colour = factor(Temperature)))+
-  geom_point()+
-  geom_smooth(method = lm, se=FALSE)+
+# This shows the overall reduction in SGR with higher Induction, 
+# but for acute this is true within ANY temperature
+# but for acclimatied, the within temperature is neutral, but the
+# trade-offs is negative.
+ggplot(G0, aes(x = meanInd, y = meanSGR))+
+  # coloured points by temperature
+  geom_point(aes(group = Temperature, colour = Temperature))+
+  # temperature regressions among clones
+  geom_smooth(aes(group = Temperature, colour = Temperature), 
+              method = lm, se=FALSE, alpha = 0.5)+
+  # overall regression
+  geom_smooth(method = lm, se = FALSE, col = 'black')+
+  # customise colour scheme
   scale_colour_brewer(palette = "RdYlBu", direction = -1)+
   facet_grid(Experiment ~ .)
 
@@ -94,15 +105,36 @@ ggplot(G0, aes(x = meanSGR, y = meanInd,
 # This one shows that within any temperature, there is a trade-off
 # that varies
 # add scales = "free_x" to facet_grid?
-ggplot(G0, aes(x = meanSGR, y = meanInd, 
-               group = Temperature, colour = factor(Temperature)))+
-  geom_point(size = 3)+
+ggplot(G0, aes(x = meanInd, y = meanSGR, 
+               group = Temperature, colour = Temperature))+
+  geom_point(size = 1)+
   scale_colour_brewer(palette = "RdYlBu", direction = -1)+
-  geom_smooth(method = lm, se=FALSE, size = 2)+
+  geom_smooth(method = lm, se=FALSE, size = 1)+
   facet_grid(Experiment ~ Temperature)+ 
   guides(color=guide_legend(title="Temp C˚"))
 
+# Models of clone means
+modTO <- lm(meanSGR ~ meanInd * Temperature * Experiment, data = G0)
 
+Anova(modTO)
+summary(modTO)
+
+newX <- expand.grid(
+  meanInd = seq(from = 0, to = 100, by = 10),
+  Temperature = unique(G0$Temperature),
+  Experiment =  unique(G0$Experiment))
+
+newY <- predict(modTO, newdata = newX, interval = 'confidence')
+
+plotThese <- data.frame(newX, newY) %>% 
+  rename(predictedSGR = fit, Induction = meanInd)
+
+ggplot(plotThese, aes(x = Induction, y = predictedSGR, 
+                      group = Temperature, colour = Temperature))+
+  geom_line()+
+  geom_point(data = G0, 
+             aes(x = meanInd, y = meanSGR))+
+  facet_wrap(~Experiment)
 
 # Models: LMER and MGMGglmm ---------------------------------------------
 
@@ -113,64 +145,49 @@ scaleDat <- pred_only %>% as.data.frame() %>%
          Growth1 = scale(Growth1)) %>% 
   na.omit()
 
+glimpse(scaleDat)
+
+ggplot(scaleDat, aes(x = maxInduction, y = Growth0, colour = factor(Temperature)))+
+  geom_point()+
+  facet_grid(Experiment ~ .)
+  
+
 # let the effect of growth vary among clone
 # let the effect of experiment vary among clone
 # let effect of temperature vary among clone
 
 # lmer model ---------------------------------------------------------
-
-# choose random effects structure
-modTradeOff <- lmer(maxInduction ~ Growth0*Temperature*Experiment+
-                   (Growth0+Temperature+Experiment|Clone), data = scaleDat)
-modTradeOffGT <- lmer(maxInduction ~ Growth0*Temperature*Experiment+
-                      (Growth0+Temperature|Clone), data = scaleDat)
-modTradeOffGE <- lmer(maxInduction ~ Growth0*Temperature*Experiment+
-                      (Growth0+Experiment|Clone), data = scaleDat)
-modTradeOffG <- lmer(maxInduction ~ Growth0*Temperature*Experiment+
-                      (Growth0|Clone), data = scaleDat)
-modTradeOff_N <- lmer(maxInduction ~ Growth0*Temperature*Experiment+
-                       (1|Clone), data = scaleDat)
-
-anova(modTradeOff, modTradeOffGE) # T not justified backwards
-anova(modTradeOff, modTradeOffGT) # E justified
-
-anova(modTradeOffGT, modTradeOffG) # T not justified forward
-anova(modTradeOffGE, modTradeOffG) # E justified forward
-
-anova(modTradeOffG, modTradeOff_N)
-
-Anova(modTradeOffG, test.statistic = "F")
-summary(modTradeOffG)
-confint(modTradeOffG)
+modTradeOff <- lmer(Growth0 ~ maxInduction*Temperature*Experiment+
+                       (1|Clone), data = pred_only)
 
 # prep plot lmer  Result 
 
 newX <- expand.grid(
-  Growth0 = seq(from = min(scaleDat$Growth0),
-                to = max(scaleDat$Growth0),
+  maxInduction = seq(from = 0,
+                to = 100,
                 length = 10),
   Temperature = unique(pred_only$Temperature),
   Experiment = unique(pred_only$Experiment),
   Clone = unique(pred_only$Clone))
 
-fixed_pred <- predict(modTradeOffG, newdata = newX, re.form = NA)
-clone_pred <- predict(modTradeOffG, newdata = newX, 
-                      re.form = ~(Growth0|Clone))
+fixed_pred <- predict(modTradeOff, newdata = newX, re.form = NA)
+clone_pred <- predict(modTradeOff, newdata = newX, 
+                      re.form = ~(1|Clone))
 
 pd <- data.frame(newX, fixed_pred, clone_pred) %>% 
   mutate(Experiment = factor(Experiment, levels = c("Acclim","Acute")))
 
 # lmer model Plot 
-lmerFixed <- ggplot(pd, aes(x = Growth0, y = fixed_pred, 
+lmerFixed <- ggplot(pd, aes(x = maxInduction, y = fixed_pred, 
                colour = factor(Temperature), 
                group = Temperature))+
   geom_line(size = 2)+
-  geom_point(data = scaleDat, aes(x = Growth0, y = maxInduction), 
+  geom_point(data = pred_only, aes(x = maxInduction, y = Growth0), 
              colour = "grey")+
   scale_colour_brewer(palette = "RdYlBu", direction = -1)+
   #scale_y_continuous(breaks = seq(from = -2, to = 2, by = 0.5))+
   facet_grid(Experiment ~ Temperature)+
-  labs(y = "Scaled Induction (fitted)", x = "Scaled Somatic Growth Rate (mm/day)")+
+  labs(y = "SGR", x = "IND")+
   theme_bw(base_size = 10)+
   guides(color=guide_legend(title="Temp C˚"))+
   theme(legend.position = "top")
@@ -178,26 +195,26 @@ lmerFixed <- ggplot(pd, aes(x = Growth0, y = fixed_pred,
 
 lmerFixed
 
-lmerClone <- ggplot(pd, aes(x = Growth0, y = clone_pred, 
+lmerClone <- ggplot(pd, aes(x = maxInduction, y = clone_pred, 
                             colour = factor(Temperature), 
                             group = Temperature))+
   geom_line(size = 2)+
   scale_colour_brewer(palette = "RdYlBu", direction = -1)+
   facet_grid(factor(Experiment, levels = c("Acclim","Acute")) ~ Clone)+
-  labs(y = "Scaled Induction (fitted)", x = "Scaled Somatic Growth Rate (mm/day)")+
+  labs(y = "SGR", x = "Ind")+
   theme_bw(base_size = 10)+
   theme(legend.position = "none")
 
 lmerClone
 
 # master?
-ggplot(pd, aes(x = Growth0, y = fixed_pred, 
+ggplot(pd, aes(x = maxInduction, y = fixed_pred, 
                colour = factor(Temperature), 
                group = Temperature))+
   geom_line(size = 2)+
   scale_colour_brewer(palette = "RdYlBu", direction = -1)+
   facet_grid(.~ Experiment)+
-  labs(y = "Scaled Induction (fitted)", x = "Scaled Somatic Growth Rate (mm/day)")+
+  labs(y = "SGR", x = "Ind")+
   theme_bw(base_size = 10)+
   theme(legend.position = "none")
 
