@@ -14,6 +14,7 @@ library(splines)
 library(lme4)
 library(car)
 library(MESS)
+library(heplots)
 
 ## Source the Trait making script ----
 
@@ -192,6 +193,33 @@ ggplot(pd, aes(x = Temperature, y = fixed_pred,
              alpha = 0.6)+
   # add the curves on top of everything
   geom_line(size = 1)+
+  # the rest
+  scale_colour_manual(values = c(Control = "black", Predator = "red"))+
+  labs(y = expression(paste("Fecundity ", Sigma, "3-clutches")))+
+  facet_wrap(~Experiment, ncol = 2)+
+  theme_bw(base_size = 15)
+
+# polyg <- pd %>% group_by(Treatment, Experiment) %>% 
+#   summarise(
+#     X1 = min(Temperature), X2 = max(Temperature),
+#     Y1 = min(fixed_pred), Y2 = last(fixed_pred),
+#     Y3 = first(fixed_pred)
+#   )
+
+# Theory Plot
+ggplot(pd, aes(x = Temperature, y = fixed_pred, 
+               group = Treatment, colour = Treatment))+
+  # add the curves on top of everything
+  geom_line(size = 1)+
+  # geom_segment(data = polyg,
+  #              aes(x = X1, y = Y1, 
+  #                  xend = X2, yend = Y1), alpha = 0.3)+
+  # geom_segment(data = polyg,
+  #              aes(x = X2, y = Y1, 
+  #                  xend = X2, yend = Y2), alpha = 0.3)+
+  # geom_segment(data = polyg,
+  #              aes(x = X1, y = Y1, 
+  #                  xend = X1, yend = Y3), alpha = 0.3)+
   # the rest
   scale_colour_manual(values = c(Control = "black", Predator = "red"))+
   labs(y = expression(paste("Fecundity ", Sigma, "3-clutches")))+
