@@ -135,14 +135,16 @@ ggplot(pd2, aes(x = Temperature, y = fixed_pred2, colour = Treatment,
 
 # calcuate area under the curves ----
 AUC <- pd %>% group_by(Clone, Treatment, Experiment) %>%
-  summarise(AUC = auc(x = Temperature, y = clone_pred - min(clone_pred)))
+  summarise(AUC = auc(x = Temperature, y = clone_pred))
 
 AUCsum <- AUC %>% group_by(Treatment, Experiment) %>% 
   summarise(meanAUC = mean(AUC),
             seAUC = sd(AUC)/sqrt(sum(!is.na(AUC))))
 
 # GRAPH AUC: predation increases the AUC ----
-ggplot(AUCsum, aes(x = Experiment, y = meanAUC, ymin = meanAUC - seAUC, ymax = meanAUC + seAUC,
+ggplot(AUCsum, aes(x = Experiment, y = meanAUC, 
+                   ymin = meanAUC - seAUC, 
+                   ymax = meanAUC + seAUC,
                    colour = Treatment, group = Treatment))+
   geom_point(size = 5,position = position_dodge(0.25))+
   geom_line(position = position_dodge(0.25))+

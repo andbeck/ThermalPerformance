@@ -128,7 +128,7 @@ pd <- pd %>% group_by(Clone, Treatment, Experiment) %>%
 
 # calcuate area under the curves ----
 AUC <- pd %>% 
-  summarise(AUC = auc(x = Temperature, y = clone_pred - min(clone_pred)))
+  summarise(AUC = auc(x = Temperature, y = clone_pred))
 
 AUCsum <- AUC %>% group_by(Treatment, Experiment) %>% 
   summarise(meanAUC = mean(AUC),
