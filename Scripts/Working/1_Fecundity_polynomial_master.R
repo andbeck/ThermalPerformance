@@ -135,6 +135,8 @@ AUCsum <- AUC %>% group_by(Treatment, Experiment) %>%
             seAUC = sd(AUC)/sqrt(sum(!is.na(AUC))))
 
 # GRAPH AUC: predation increases the AUC ----
+AUCsum <- AUCsum %>% mutate(Experiment = factor(Experiment, levels = c("Acute","Acclim")))
+
 ggplot(AUCsum, aes(x = Experiment, y = meanAUC, ymin = meanAUC - seAUC, ymax = meanAUC + seAUC,
                    colour = Treatment, group = Treatment))+
   geom_point(size = 5,position = position_dodge(0.25))+
@@ -183,7 +185,6 @@ mod_Popts <- lm(Popt ~ Treatment * Experiment, data = P_T_opts)
 heplots::etasq(mod_Topts, anova = TRUE) # small effect sizes on Topt
 heplots::etasq(mod_Popts, anova = TRUE) # substantial effect sizes Performance
 
-
 # Theory Plot
 ggplot(pd, aes(x = Temperature, y = fixed_pred, 
                group = Treatment, colour = Treatment))+
@@ -200,7 +201,7 @@ ggplot(pd, aes(x = Temperature, y = fixed_pred,
   #                  xend = X1, yend = Y3), alpha = 0.3)+
   # the rest
   scale_colour_manual(values = c(Control = "black", Predator = "red"))+
-  labs(y = expression(paste("Fecundity ", Sigma, "3-clutches")))+
+  labs(y = expression(paste("Fecundity ", Sigma, "2-clutches")))+
   facet_wrap(~Experiment, ncol = 2)+
   theme_bw(base_size = 15)
 

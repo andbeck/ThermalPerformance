@@ -143,6 +143,8 @@ AUCsum <- AUC %>% group_by(Treatment, Experiment) %>%
             seAUC = sd(AUC)/sqrt(sum(!is.na(AUC))))
 
 # GRAPH AUC: predation increases the AUC ----
+AUCsum <- AUCsum %>% mutate(Experiment = factor(Experiment, levels = c("Acute","Acclim")))
+
 ggplot(AUCsum, aes(x = Experiment, y = meanAUC, 
                    ymin = meanAUC - seAUC, 
                    ymax = meanAUC + seAUC,
