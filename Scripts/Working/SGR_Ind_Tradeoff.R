@@ -158,7 +158,9 @@ ggplot(scaleDat, aes(x = maxInduction, y = Growth0, colour = factor(Temperature)
 
 # lmer model ---------------------------------------------------------
 modTradeOff <- lmer(Growth0 ~ maxInduction*Temperature*Experiment+
-                       (1|Clone), data = pred_only)
+                       (maxInduction|Clone), data = pred_only,
+                    control = lmerControl(optimizer = "Nelder_Mead"))
+
 Anova(modTradeOff, test ="F")
 
 # prep plot lmer  Result 

@@ -114,7 +114,7 @@ ggplot(plotThese, aes(x = Induction, y = predictedFec,
 
 # lmer model ---------------------------------------------------------
 modTradeOff <- lmer(Fec ~ maxInduction*Temperature*Experiment+
-                      (1|Clone), data = fec_ind)
+                      (maxInduction|Clone), data = fec_ind)
 Anova(modTradeOff, test ="F")
 
 # prep plot lmer  Result 
@@ -123,13 +123,13 @@ newX <- expand.grid(
   maxInduction = seq(from = 0,
                      to = 100,
                      length = 10),
-  Temperature = unique(Fec$Temperature),
-  Experiment = unique(Fec$Experiment),
-  Clone = unique(Fec$Clone))
+  Temperature = unique(fec_ind$Temperature),
+  Experiment = unique(fec_ind$Experiment),
+  Clone = unique(fec_ind$Clone))
 
 fixed_pred <- predict(modTradeOff, newdata = newX, re.form = NA)
 clone_pred <- predict(modTradeOff, newdata = newX, 
-                      re.form = ~(1|Clone))
+                      re.form = ~(maxInduction|Clone))
 
 pd <- data.frame(newX, fixed_pred, clone_pred) %>% 
   mutate(Experiment = factor(Experiment, levels = c("Acclim","Acute")))
@@ -139,7 +139,7 @@ lmerFixed <- ggplot(pd, aes(x = maxInduction, y = fixed_pred,
                             colour = factor(Temperature), 
                             group = Temperature))+
   geom_line(size = 2)+
-  geom_point(data = pred_only, aes(x = maxInduction, y = Growth0), 
+  geom_point(data = fec_ind, aes(x = maxInduction, y = Fec), 
              colour = "grey")+
   scale_colour_brewer(palette = "RdYlBu", direction = -1)+
   #scale_y_continuous(breaks = seq(from = -2, to = 2, by = 0.5))+
