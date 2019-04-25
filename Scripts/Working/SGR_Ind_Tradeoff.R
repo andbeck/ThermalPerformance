@@ -159,6 +159,7 @@ ggplot(scaleDat, aes(x = maxInduction, y = Growth0, colour = factor(Temperature)
 # lmer model ---------------------------------------------------------
 modTradeOff <- lmer(Growth0 ~ maxInduction*Temperature*Experiment+
                        (1|Clone), data = pred_only)
+Anova(modTradeOff, test ="F")
 
 # prep plot lmer  Result 
 
@@ -188,7 +189,7 @@ lmerFixed <- ggplot(pd, aes(x = maxInduction, y = fixed_pred,
   #scale_y_continuous(breaks = seq(from = -2, to = 2, by = 0.5))+
   facet_grid(Experiment ~ Temperature)+
   labs(y = "SGR", x = "IND")+
-  theme_bw(base_size = 10)+
+  theme_bw(base_size = 15)+
   guides(color=guide_legend(title="Temp C˚"))+
   theme(legend.position = "top")
 

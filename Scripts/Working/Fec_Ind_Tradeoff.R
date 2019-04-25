@@ -97,17 +97,57 @@ summary(modTO)
 
 newX <- expand.grid(
   meanInd = seq(from = 0, to = 100, by = 10),
-  Temperature = unique(G0$Temperature),
-  Experiment =  unique(G0$Experiment))
+  Temperature = unique(F0$Temperature),
+  Experiment =  unique(F0$Experiment))
 
 newY <- predict(modTO, newdata = newX, interval = 'confidence')
 
 plotThese <- data.frame(newX, newY) %>% 
-  rename(predictedSGR = fit, Induction = meanInd)
+  rename(predictedFec = fit, Induction = meanInd)
 
-ggplot(plotThese, aes(x = Induction, y = predictedSGR, 
+ggplot(plotThese, aes(x = Induction, y = predictedFec, 
                       group = Temperature, colour = Temperature))+
   geom_line()+
-  geom_point(data = G0, 
-             aes(x = meanInd, y = meanSGR))+
+  geom_point(data = F0, 
+             aes(x = meanInd, y = meanFec))+
   facet_wrap(~Experiment)
+
+# lmer model ---------------------------------------------------------
+modTradeOff <- lmer(Fec ~ maxInduction*Temperature*Experiment+
+                      (1|Clone), data = fec_ind)
+Anova(modTradeOff, test ="F")
+
+# prep plot lmer  Result 
+
+newX <- expand.grid(
+  maxInduction = seq(from = 0,
+                     to = 100,
+                     length = 10),
+  Temperature = unique(Fec$Temperature),
+  Experiment = unique(Fec$Experiment),
+  Clone = unique(Fec$Clone))
+
+fixed_pred <- predict(modTradeOff, newdata = newX, re.form = NA)
+clone_pred <- predict(modTradeOff, newdata = newX, 
+                      re.form = ~(1|Clone))
+
+pd <- data.frame(newX, fixed_pred, clone_pred) %>% 
+  mutate(Experiment = factor(Experiment, levels = c("Acclim","Acute")))
+
+# lmer model Plot 
+lmerFixed <- ggplot(pd, aes(x = maxInduction, y = fixed_pred, 
+                            colour = factor(Temperature), 
+                            group = Temperature))+
+  geom_line(size = 2)+
+  geom_point(data = pred_only, aes(x = maxInduction, y = Growth0), 
+             colour = "grey")+
+  scale_colour_brewer(palette = "RdYlBu", direction = -1)+
+  #scale_y_continuous(breaks = seq(from = -2, to = 2, by = 0.5))+
+  facet_grid(Experiment ~ Temperature)+
+  labs(y = "Fec", x = "IND")+
+  theme_bw(base_size = 15)+
+  guides(color=guide_legend(title="Temp C˚"))+
+  theme(legend.position = "top")
+
+
+lmerFixed
