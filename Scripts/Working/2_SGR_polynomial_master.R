@@ -232,6 +232,50 @@ ggplot(pd, aes(x = Temperature, y = fixed_pred,
   theme_bw(base_size = 15)
 
 
+# Four Traits: Popt, Topt, Min, Max ----
+
+# Gen specialist if Popt up and 13 or 28 up because higher performance at 13 or 28 
+# equates with steeper drop and narrower
+
+# get the 13 and 28 values
+min_max <- pd %>% filter(Temperature == 13 | Temperature == 28) %>% 
+  select(Temperature, Treatment, Experiment, clone_pred) %>% 
+  spread(Temperature, clone_pred)
+
+# merge the data frames
+four_traits <- left_join(min_max, P_T_opts)
+
+# Test for Gen-Spec: Popt up and 13/28 up; If Popt up and 13/28 same = Fast Slow
+# As Popt increases - both 13 and 28 increase... showing G-S
+GS1 <- ggplot(four_traits, aes(x = Popt, y = `13`))+
+  geom_point()+
+  geom_smooth(method = lm, se = FALSE)+
+  facet_grid(Experiment ~ Treatment)+
+  ggtitle("Gen-Spec 1")
+
+GS2 <- ggplot(four_traits, aes(x = Popt, y = `28`))+
+  geom_point()+
+  geom_smooth(method = lm, se = FALSE)+
+  facet_grid(Experiment ~ Treatment)+
+  ggtitle("Gen-Spec 2")
+
+# Test Hot-Cold: Topt up 13/28 down (hits the temp line lower as it's moved over)
+# As Topt increases, Performance at 13 decreases... showing fast slow
+HC1 <- ggplot(four_traits, aes(x = Topt, y = `13`))+
+  geom_point()+
+  geom_smooth(method = lm, se = FALSE)+
+  facet_grid(Experiment ~ Treatment)+
+  ggtitle("Hot-Cold 1")
+
+# As Topt increases, Performance at 28 does not change
+HC2 <- ggplot(four_traits, aes(x = Topt, y = `28`))+
+  geom_point()+
+  geom_smooth(method = lm, se = FALSE)+
+  facet_grid(Experiment ~ Treatment)+
+  ggtitle("Hot-Cold 2")
+
+gridExtra::grid.arrange(GS1, GS2, HC1, HC2)
+
 # # T- and P-opt values for plotting (use fixed_pred) ----
 # # NOT USING NOW
 # graph_PT <- pd %>% ungroup() %>% 

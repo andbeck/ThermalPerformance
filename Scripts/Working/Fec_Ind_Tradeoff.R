@@ -21,12 +21,15 @@ scaleInd <- SGR_Ind %>%
 source("./Scripts/Working/MakeFecData_APB.R")
 glimpse(Fec_scale)
 
+# consider using Fec or Effort... both give same result - no trade-off.
+
 Fec_scale <- Fec_scale %>% ungroup() %>% 
-  select(Clone, Temperature, Treatment, Experiment, Fec) %>% 
+  select(Clone, Temperature, Treatment, Experiment, Fec, Body) %>% 
   group_by(Clone, Temperature, Treatment, Experiment) %>% 
   mutate(Rep = row_number()) %>% 
   mutate(ID = paste(Rep, Clone, Temperature, Treatment, Experiment, sep = "-")) %>% 
-  select(ID, Clone, Temperature, Treatment, Experiment, Fec)
+  select(ID, Clone, Temperature, Treatment, Experiment, Fec, Body) %>% 
+  mutate(Effort = Fec/Body)
 
 
 
@@ -58,7 +61,7 @@ filter(fec_ind,
        Experiment == "Acute", Temperature == 13)
 
 # plot all of the data
-ggplot(fec_ind, aes(x = maxInduction, y = Fec))+
+ggplot(fec_ind, aes(x = maxInduction, y = Effort))+
   geom_smooth(method = lm, se = FALSE)+
   geom_jitter(aes(colour = Clone))+
   facet_grid(Experiment~Temperature)
@@ -67,7 +70,7 @@ ggplot(fec_ind, aes(x = maxInduction, y = Fec))+
 mean_fec_ind <- fec_ind %>% 
   group_by(Clone, Temperature, Treatment, Experiment) %>% 
   summarise(meanInd = mean(maxInduction, na.rm = TRUE),
-            meanFec = mean(Fec, na.rm = TRUE))
+            meanFec = mean(Effort, na.rm = TRUE))
 
 # factorise by temperature
 F0 <-  mean_fec_ind %>% 
@@ -114,7 +117,8 @@ ggplot(plotThese, aes(x = Induction, y = predictedFec,
 
 # lmer model ---------------------------------------------------------
 modTradeOff <- lmer(Fec ~ maxInduction*Temperature*Experiment+
-                      (maxInduction|Clone), data = fec_ind)
+                      (maxInduction|Clone), data = fec_ind,
+                    control = lmerControl(optimizer = "Nelder_Mead"))
 Anova(modTradeOff, test ="F")
 
 # prep plot lmer  Result 

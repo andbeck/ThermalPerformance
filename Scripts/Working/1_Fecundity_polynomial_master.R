@@ -30,7 +30,10 @@ source("./Scripts/Working/MakeFecData_APB.R")
 glimpse(Fec_scale)
 p_Fec # the plot
 
-ggplot(Fec_scale, aes(x = Temperature, y = Fec, 
+# USING Fec OR Fec/Body Size for Reproductive Effort ----
+# Reproductive Effort gives substantial three way result
+
+ggplot(Fec_scale, aes(x = Temperature, y = Fec/Body, 
                      colour = Treatment))+
   geom_point()+
   geom_smooth(method = lm, formula = y ~ poly(x,2), se = FALSE)+
@@ -43,12 +46,12 @@ ggplot(Fec_scale, aes(x = Temperature, y = Fec,
 
 # Effect of Temp varies by treatment and by Experiment
 # Effect of Treatment does not vary by Experiment (Predation effect is invariant)
-mod <- lmer(Fec ~ (poly(Temperature,2)+Treatment+Experiment)^3 + 
+mod <- lmer(Fec/Body ~ (poly(Temperature,2)+Treatment+Experiment)^3 + 
               (poly(Temperature,2)|Clone), 
-            data = Fec_scale)
+            data = Fec_scale, control = lmerControl(optimizer = "Nelder_Mead"))
 
 summary(mod)  
-Anova(mod)
+Anova(mod, test = "F")
 
 # Plot the results ----
 
@@ -96,7 +99,7 @@ ggplot(pd, aes(x = Temperature, y = fixed_pred))+
   theme_bw(base_size = 15)+
   theme(legend.position = "none")
 
-# align with theory picture
+# align with theory picture (uses wider range of the Temperatures)
 ggplot(pd2, aes(x = Temperature, y = fixed_pred2, colour = Treatment,
                linetype = Experiment))+
   geom_line(size = 2, alpha = 0.3)+
@@ -169,7 +172,7 @@ P_T_opts
 
 # This calculates the means and SE for each clone
 # of Peak perf and T at which it occurs
-P_T_cloneMeans <- P_T_opts %>% 
+P_T_across_cloneMeans <- P_T_opts %>% 
   group_by(Treatment, Experiment) %>% 
   summarise(
     meanP = mean(Popt),
@@ -185,27 +188,71 @@ mod_Popts <- lm(Popt ~ Treatment * Experiment, data = P_T_opts)
 heplots::etasq(mod_Topts, anova = TRUE) # small effect sizes on Topt
 heplots::etasq(mod_Popts, anova = TRUE) # substantial effect sizes Performance
 
-# Theory Plot
-ggplot(pd, aes(x = Temperature, y = fixed_pred, 
-               group = Treatment, colour = Treatment))+
-  # add the curves on top of everything
-  geom_line(size = 1)+
-  # geom_segment(data = polyg,
-  #              aes(x = X1, y = Y1, 
-  #                  xend = X2, yend = Y1), alpha = 0.3)+
-  # geom_segment(data = polyg,
-  #              aes(x = X2, y = Y1, 
-  #                  xend = X2, yend = Y2), alpha = 0.3)+
-  # geom_segment(data = polyg,
-  #              aes(x = X1, y = Y1, 
-  #                  xend = X1, yend = Y3), alpha = 0.3)+
-  # the rest
-  scale_colour_manual(values = c(Control = "black", Predator = "red"))+
-  labs(y = expression(paste("Fecundity ", Sigma, "2-clutches")))+
-  facet_wrap(~Experiment, ncol = 2)+
-  theme_bw(base_size = 15)
+# Four Traits: Popt, Topt, Min, Max ----
 
+# Gen specialist if Popt up and 13 or 28 up because higher performance at 13 or 28 
+# equates with steeper drop and narrower
 
+# get the 13 and 28 values
+min_max <- pd %>% filter(Temperature == 13| Temperature == 28) %>% 
+  select(Temperature, Treatment, Experiment, clone_pred) %>% 
+  spread(Temperature, clone_pred)
+
+# merge the data frames
+four_traits <- left_join(min_max, P_T_opts)
+
+# Test for Gen-Spec: Popt up and 13/28 up; If Popt up and 13/28 same = Fast Slow
+# As Popt increases - both 13 and 28 increase... showing G-S
+GS1 <- ggplot(four_traits, aes(x = Popt, y = `13`))+
+  geom_point()+
+  geom_smooth(method = lm, se = FALSE)+
+  facet_grid(Experiment ~ Treatment)+
+  ggtitle("Gen-Spec 1")
+
+GS2 <- ggplot(four_traits, aes(x = Popt, y = `28`))+
+  geom_point()+
+  geom_smooth(method = lm, se = FALSE)+
+  facet_grid(Experiment ~ Treatment)+
+  ggtitle("Gen-Spec 2")
+
+# Test Hot-Cold: Topt up 13/28 down (hits the temp line lower as it's moved over)
+# As Topt increases, Performance at 13 decreases... showing fast slow
+HC1 <- ggplot(four_traits, aes(x = Topt, y = `13`))+
+  geom_point()+
+  geom_smooth(method = lm, se = FALSE)+
+  facet_grid(Experiment ~ Treatment)+
+  ggtitle("Hot-Cold 1")
+
+# As Topt increases, Performance at 28 does not change
+HC2 <- ggplot(four_traits, aes(x = Topt, y = `28`))+
+  geom_point()+
+  geom_smooth(method = lm, se = FALSE)+
+  facet_grid(Experiment ~ Treatment)+
+  ggtitle("Hot-Cold 2")
+
+gridExtra::grid.arrange(GS1, GS2, HC1, HC2)
+
+# # Theory Plot
+# ggplot(pd, aes(x = Temperature, y = fixed_pred, 
+#                group = Treatment, colour = Treatment))+
+#   # add the curves on top of everything
+#   geom_line(size = 1)+
+#   # geom_segment(data = polyg,
+#   #              aes(x = X1, y = Y1, 
+#   #                  xend = X2, yend = Y1), alpha = 0.3)+
+#   # geom_segment(data = polyg,
+#   #              aes(x = X2, y = Y1, 
+#   #                  xend = X2, yend = Y2), alpha = 0.3)+
+#   # geom_segment(data = polyg,
+#   #              aes(x = X1, y = Y1, 
+#   #                  xend = X1, yend = Y3), alpha = 0.3)+
+#   # the rest
+#   scale_colour_manual(values = c(Control = "black", Predator = "red"))+
+#   labs(y = expression(paste("Fecundity ", Sigma, "2-clutches")))+
+#   facet_wrap(~Experiment, ncol = 2)+
+#   theme_bw(base_size = 15)
+# 
+# 
 # # T- and P-opt values for plotting (use fixed_pred) ----
 # # NOT USING
 # graph_PT <- pd %>% ungroup() %>% 

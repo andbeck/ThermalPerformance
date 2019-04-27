@@ -25,7 +25,7 @@ Fec_scale <- hebe_all %>%
   filter(Mature == "A"&No.Neonates>=1) %>% 
   group_by(ID, Clone, Temperature, Treatment, Experiment) %>% 
   mutate(Fec = sum(No.Neonates, na.rm = TRUE)) %>%
-  select(Clone, Temperature, Treatment, Experiment, Fec) %>% 
+  select(Clone, Temperature, Treatment, Experiment, Fec, Body) %>% 
   distinct()
 
 # inital plot of Fecundity
