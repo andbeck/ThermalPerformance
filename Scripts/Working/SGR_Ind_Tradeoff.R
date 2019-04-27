@@ -181,8 +181,7 @@ pd <- data.frame(newX, fixed_pred, clone_pred) %>%
   mutate(Experiment = factor(Experiment, levels = c("Acclim","Acute")))
 
 # lmer model Plot 
-lmerFixed <- ggplot(pd, aes(x = maxInduction, y = fixed_pred, 
-               colour = factor(Temperature), 
+lmerFixed <- ggplot(pd, aes(x = maxInduction, y = fixed_pred, colour = factor(Temperature), 
                group = Temperature))+
   geom_line(size = 2)+
   geom_point(data = pred_only, aes(x = maxInduction, y = Growth0), 
