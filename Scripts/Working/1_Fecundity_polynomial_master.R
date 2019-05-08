@@ -106,7 +106,8 @@ ggplot(pd2, aes(x = Temperature, y = fixed_pred2, colour = Treatment,
   geom_line(size = 2, data = pd, aes(x = Temperature, y = fixed_pred, colour = Treatment,
                                      linetype = Experiment))+
   geom_vline(xintercept = c(13,28), col = 'grey30')+
-  geom_hline(yintercept = 0, col = 'grey30')+
+  geom_vline(xintercept = c(15,24), col = 'grey30')+
+  geom_hline(yintercept = c(0,8), col = 'grey30')+
   scale_colour_manual(values = c(Control = "black", Predator = "red"))+
   scale_linetype_manual(values = c(Acute = "dashed", Acclim = "solid"))+
   labs(y =expression(paste("Fecundity (", Sigma, "3-clutches)")))+
@@ -201,36 +202,29 @@ min_max <- pd %>% filter(Temperature == 13| Temperature == 28) %>%
 # merge the data frames
 four_traits <- left_join(min_max, P_T_opts)
 
-# Test for Gen-Spec: Popt up and 13/28 up; If Popt up and 13/28 same = Fast Slow
-# As Popt increases - both 13 and 28 increase... showing G-S
-GS1 <- ggplot(four_traits, aes(x = Popt, y = `13`))+
-  geom_point()+
-  geom_smooth(method = lm, se = FALSE)+
-  facet_grid(Experiment ~ Treatment)+
-  ggtitle("Gen-Spec 1")
+# get p13/p28 and Popt/Topt
+template <- four_traits %>% 
+  group_by(Treatment, Experiment) %>% 
+  summarise(
+    p13 = mean(`13`),
+    p28 = mean(`28`),
+    meanT = mean(Topt),
+    meanP = mean(Popt)
+  )
 
-GS2 <- ggplot(four_traits, aes(x = Popt, y = `28`))+
-  geom_point()+
-  geom_smooth(method = lm, se = FALSE)+
-  facet_grid(Experiment ~ Treatment)+
-  ggtitle("Gen-Spec 2")
+# GS/FS/HC testing
+g1 <- ggplot(template, aes(x = meanP, y = p13, colour = Treatment, 
+                       shape = Experiment, group = Experiment))+
+    geom_point(size = 5)+
+    geom_line(colour = 'black')
 
-# Test Hot-Cold: Topt up 13/28 down (hits the temp line lower as it's moved over)
-# As Topt increases, Performance at 13 decreases... showing fast slow
-HC1 <- ggplot(four_traits, aes(x = Topt, y = `13`))+
-  geom_point()+
-  geom_smooth(method = lm, se = FALSE)+
-  facet_grid(Experiment ~ Treatment)+
-  ggtitle("Hot-Cold 1")
+g2 <- ggplot(template, aes(x = meanP, y = p28, colour = Treatment, 
+                           shape = Experiment, group = Experiment))+
+  geom_point(size = 5)+
+  geom_line(colour = 'black')
 
-# As Topt increases, Performance at 28 does not change
-HC2 <- ggplot(four_traits, aes(x = Topt, y = `28`))+
-  geom_point()+
-  geom_smooth(method = lm, se = FALSE)+
-  facet_grid(Experiment ~ Treatment)+
-  ggtitle("Hot-Cold 2")
+gridExtra::grid.arrange(g1,g2)
 
-gridExtra::grid.arrange(GS1, GS2, HC1, HC2)
 
 # # Theory Plot
 # ggplot(pd, aes(x = Temperature, y = fixed_pred, 
