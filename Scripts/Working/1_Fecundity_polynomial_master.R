@@ -68,14 +68,14 @@ newX <- expand.grid(
 # use with theory picture?
 # expanded temperature range
 newX2 <- expand.grid(
-  Temperature = seq(5,30,length = 100),
+  Temperature = seq(0,35,length = 100),
   Treatment = unique(Fec_scale$Treatment),
   Experiment = unique(Fec_scale$Experiment),
   Clone = unique(Fec_scale$Clone)
 )
 
 # predicted Fecundities
-fixed_pred <- predict(mod, newdata = newX,re.form = NA)
+fixed_pred <- predict(mod, newdata = newX, re.form = NA)
 fixed_pred2 <- predict(mod, newdata = newX2, re.form = NA)
 clone_pred <- predict(mod, newdata = newX, 
                       re.form = ~(poly(Temperature,2)|Clone))
@@ -99,21 +99,37 @@ ggplot(pd, aes(x = Temperature, y = fixed_pred))+
   theme_bw(base_size = 15)+
   theme(legend.position = "none")
 
+
+
 # align with theory picture (uses wider range of the Temperatures)
-ggplot(pd2, aes(x = Temperature, y = fixed_pred2, colour = Treatment,
-               linetype = Experiment))+
+p1 <- ggplot(pd2, aes(x = Temperature, y = fixed_pred2, colour = Treatment))+
   geom_line(size = 2, alpha = 0.3)+
-  geom_line(size = 2, data = pd, aes(x = Temperature, y = fixed_pred, colour = Treatment,
-                                     linetype = Experiment))+
+  geom_line(size = 2, data = pd, aes(x = Temperature, y = fixed_pred, 
+                                     colour = Treatment))+
   geom_vline(xintercept = c(13,28), col = 'grey30')+
-  geom_vline(xintercept = c(15,24), col = 'grey30')+
-  geom_hline(yintercept = c(0,8), col = 'grey30')+
+  geom_hline(yintercept = 0, col = 'grey30')+
   scale_colour_manual(values = c(Control = "black", Predator = "red"))+
   scale_linetype_manual(values = c(Acute = "dashed", Acclim = "solid"))+
-  labs(y =expression(paste("Fecundity (", Sigma, "3-clutches)")))+
+  labs(y =expression(paste("Fecundity (", Sigma, "2-clutches)")))+
   ylim(-1,30)+
+  facet_grid(~Experiment)+
   theme_bw(base_size = 15)
 
+p2 <- ggplot(pd2, aes(x = Temperature, y = fixed_pred2, 
+                      colour = Experiment, 
+                      group = Experiment))+
+  geom_line(size = 2, alpha = 0.3)+
+  geom_line(size = 2, data = pd, aes(x = Temperature, y = fixed_pred, 
+                                     colour = Experiment, group = Experiment))+
+  geom_vline(xintercept = c(13,28), col = 'grey30')+
+  geom_hline(yintercept = 0, col = 'grey30')+
+  scale_colour_manual(values = c(Acclim = "green", Acute = "blue"))+
+  labs(y = expression(paste("Fecundity (", Sigma, "2-clutches)")))+
+  ylim(-1,30)+
+  facet_grid(~Treatment)+
+  theme_bw(base_size = 15)
+
+gridExtra::grid.arrange(p1,p2)
 
 ## AUC and Popt/Topt analysis ----
 
