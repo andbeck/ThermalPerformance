@@ -28,7 +28,7 @@ ggplot(pred_only, aes(x = Temperature, y = Growth0,
   scale_x_continuous(breaks = c(13,16,20,24,28))+
   scale_colour_brewer(palette = "RdYlBu", direction = -1)+
   ylab("Somatic Growth Rate (mm/day)")+
-  theme_grey(base_size = 15)+
+  theme_grey(base_size = 10)+
   theme(axis.text.x = element_text(angle = 45,vjust = 0.5))+
   guides(color=guide_legend(title="Temp C˚")) 
 
@@ -46,7 +46,7 @@ ggplot(pred_only, aes(x = Temperature, y = maxInduction,
   scale_x_continuous(breaks = c(13,16,20,24,28))+
   scale_colour_brewer(palette = "RdYlBu", direction = -1)+
   labs(x = "Temperature (C˚)", y = "Induction Score")+
-  theme_grey(base_size = 15)+
+  theme_grey(base_size = 10)+
   theme(axis.text.x = element_text(angle = 45,vjust = 0.5))+
   guides(color=guide_legend(title="Temp C˚")) 
 
