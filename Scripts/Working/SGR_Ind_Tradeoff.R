@@ -32,7 +32,22 @@ ggplot(pred_only, aes(x = Temperature, y = Growth0,
   theme(axis.text.x = element_text(angle = 45,vjust = 0.5))+
   guides(color=guide_legend(title="Temp C˚")) 
 
-
+ggplot(pred_only, aes(x = Temperature, y = Growth0))+
+  geom_jitter(size=2, alpha = 0.3, width = 0.5, 
+              aes(colour = Clone))+
+  geom_line(stat = 'smooth', aes(group = Clone, 
+                                    colour = Clone),
+              method = "lm", formula = y ~ poly(x,2), se=F,
+              size = 0.5, alpha = 0.3)+
+  geom_smooth(method = "lm", formula = y ~ poly(x,2), se=F,
+              colour = "black", size = 2)+
+  facet_grid(~Experiment)+
+  scale_x_continuous(breaks = c(13,16,20,24,28))+
+  scale_colour_brewer(palette = "RdYlBu", direction = -1)+
+  ylab("Somatic Growth Rate (mm/day)")+
+  theme_bw(base_size = 10)+
+  theme(axis.text.x = element_text(angle = 45,vjust = 0.5))+
+  guides(colour = FALSE) 
 
 # Fig 2 Induction Declines or flat with temperature ---------
 # Acclim/Acute alterns means
@@ -50,6 +65,19 @@ ggplot(pred_only, aes(x = Temperature, y = maxInduction,
   theme(axis.text.x = element_text(angle = 45,vjust = 0.5))+
   guides(color=guide_legend(title="Temp C˚")) 
 
+ggplot(pred_only, aes(x = Temperature, y = maxInduction))+
+  geom_jitter(size=2, width = 0.5,aes(colour = Clone), alpha = 0.3)+
+  geom_smooth(method = lm, se=F, col = 'black',
+              size = 2)+
+  geom_line(stat = 'smooth', method = lm, se=F,
+              aes(group = Clone, colour = Clone), alpha = 0.3)+
+  facet_grid(~Experiment)+
+  scale_x_continuous(breaks = c(13,16,20,24,28))+
+  scale_colour_brewer(palette = "RdYlBu", direction = -1)+
+  labs(x = "Temperature (C˚)", y = "Induction Score")+
+  theme_bw(base_size = 10)+
+  theme(axis.text.x = element_text(angle = 45,vjust = 0.5))+
+  guides(colour = FALSE)
 
 # Trade-off vs. temperature (Raw Data) ----
 # mostly negative, with some clones constrained by not inducing
@@ -189,7 +217,7 @@ lmerFixed <- ggplot(pd, aes(x = maxInduction, y = fixed_pred, colour = factor(Te
   scale_colour_brewer(palette = "RdYlBu", direction = -1)+
   #scale_y_continuous(breaks = seq(from = -2, to = 2, by = 0.5))+
   facet_grid(Experiment ~ Temperature)+
-  labs(y = "SGR", x = "IND")+
+  labs(y = "SGR (mm/day)", x = "Max Induction")+
   theme_bw(base_size = 15)+
   guides(color=guide_legend(title="Temp C˚"))+
   theme(legend.position = "top")
