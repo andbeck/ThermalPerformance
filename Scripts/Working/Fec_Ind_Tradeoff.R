@@ -11,40 +11,47 @@ names(SGR_Ind)
 # Create a scaled dataset and a response one with Factorial ----------------------------
 # Omit D10_A13 because so much missing
 
-scaleInd <- SGR_Ind %>% 
-  group_by(Clone, Temperature, Treatment, Experiment) %>% 
-  mutate(Rep = row_number()) %>% 
-  mutate(ID = paste(Rep, Clone, Temperature, Treatment, Experiment, sep = "-")) %>% 
-  select(ID, Clone, Temperature, Treatment, Experiment, maxInduction)
+scaleInd_Pred <- SGR_Ind %>% 
+  arrange(Clone, Temperature, Treatment, Experiment) %>% 
+  mutate(ID = paste(Clone, Temperature, Treatment, Experiment, sep = "-")) %>% 
+  select(ID, Clone, Temperature, Treatment, Experiment, maxInduction) %>% 
+  filter(Treatment == "Predator")
 
 # Fec Data
 source("./Scripts/Working/MakeFecData_APB.R")
-glimpse(Fec_scale)
 
 # consider using Fec or Effort... both give same result - no trade-off.
 
-Fec_scale <- Fec_scale %>% ungroup() %>% 
-  select(Clone, Temperature, Treatment, Experiment, Fec, Body) %>% 
-  group_by(Clone, Temperature, Treatment, Experiment) %>% 
-  mutate(Rep = row_number()) %>% 
-  mutate(ID = paste(Rep, Clone, Temperature, Treatment, Experiment, sep = "-")) %>% 
-  select(ID, Clone, Temperature, Treatment, Experiment, Fec, Body) %>% 
-  mutate(Effort = Fec/Body)
+Fec_scale_pred <- Fec_scale %>% ungroup() %>% 
+  select(Clone, Temperature, Treatment, Experiment, Fec, Effort) %>% 
+  arrange(Clone, Temperature, Treatment, Experiment) %>% 
+  mutate(ID = paste(Clone, Temperature, Treatment, Experiment, sep = "-")) %>% 
+  filter(Treatment == "Predator")
+
+glimpse(Fec_scale_pred)
+
+ggplot(Fec_scale_pred, aes(x = Temperature, y = Effort))+
+  geom_jitter(size = 2, width = 0.5, aes(colour = Clone), alpha = 0.3)+
+  geom_smooth(method = lm, formula = y ~ poly(x, 2), se = FALSE, colour = "black")+
+  geom_line(stat = 'smooth', aes(group = Clone, colour = Clone),
+            method = lm, formula = y ~ poly(x, 2), se = FALSE, alpha = 0.3)+
+  facet_grid(~Experiment)+
+  theme_bw(base_size = 10)+
+  guides(colour = FALSE)
 
 
-
+###
 # look at the data
-glimpse(scaleInd)
-tempInd <- filter(scaleInd, 
+glimpse(scaleInd_Pred)
+glimpse(Fec_scale_pred)
+
+tempInd <- filter(scaleInd_Pred, 
        Clone == "LD33", 
-       Treatment == "Control", 
        Experiment == "Acute", 
        Temperature == 13) %>% data.frame()
 
-glimpse(Fec_scale)
-tempFec <- filter(Fec_scale, 
+tempFec <- filter(Fec_scale_pred, 
        Clone == "LD33", 
-       Treatment == "Control", 
        Experiment == "Acute", 
        Temperature == 13) %>% data.frame()
 
@@ -52,12 +59,12 @@ tempFec
 tempInd
 
 # CHECK THIS AGAIN.
-fec_ind <- full_join(scaleInd, Fec_scale)
+fec_ind <- full_join(scaleInd_Pred, Fec_scale_pred)
 glimpse(fec_ind)
 
 # test
 filter(fec_ind, 
-       Clone == "LD33", Treatment == "Control", 
+       Clone == "LD33", Treatment == "Predator", 
        Experiment == "Acute", Temperature == 13)
 
 # plot all of the data
@@ -119,7 +126,12 @@ ggplot(plotThese, aes(x = Induction, y = predictedFec,
 modTradeOff <- lmer(Fec ~ maxInduction*Temperature*Experiment+
                       (maxInduction|Clone), data = fec_ind,
                     control = lmerControl(optimizer = "Nelder_Mead"))
+modTradeOff2 <- lmer(Fec ~ (maxInduction+Temperature+Experiment)^2+
+                      (maxInduction|Clone), data = fec_ind,
+                    control = lmerControl(optimizer = "Nelder_Mead"))
+
 Anova(modTradeOff, test ="F")
+anova(modTradeOff, modTradeOff2, test = "Chisq")
 
 # prep plot lmer  Result 
 

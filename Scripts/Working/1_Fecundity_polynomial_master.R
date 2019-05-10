@@ -28,7 +28,7 @@ source("./Scripts/Working/MakeFecData_APB.R")
 
 # look at the data
 glimpse(Fec_scale)
-p_Fec # the plot
+
 
 # USING Fec OR Fec/Body Size for Reproductive Effort ----
 # Reproductive Effort gives substantial three way result
