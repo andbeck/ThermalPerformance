@@ -114,23 +114,39 @@ ggplot(pd, aes(x = Temperature, y = fixed_pred))+
   # geom_jitter(data = Ro, aes(x = Temperature, y = Ro.B2, colour = Clone), alpha = 0.3,
   #             height = 0, width = 1)+
   facet_grid(Experiment ~ Treatment)+
-  labs(y = "Somatic Growth Rate (mm/day)")+
+  labs(y = "Somatic Growth Rate (mm/day)", size = 1)+
   theme_bw(base_size = 15)+
   theme(legend.position = "none")
 
-# align with theory picture
-ggplot(pd2, aes(x = Temperature, y = fixed_pred2, colour = Treatment,
-                linetype = Experiment))+
+# align with theory picture (uses wider range of the Temperatures)
+p1 <- ggplot(pd2, aes(x = Temperature, y = fixed_pred2, colour = Treatment))+
   geom_line(size = 2, alpha = 0.3)+
-  geom_line(size = 2, data = pd, aes(x = Temperature, y = fixed_pred, colour = Treatment,
-                                     linetype = Experiment))+
+  geom_line(size = 2, data = pd, aes(x = Temperature, y = fixed_pred, 
+                                     colour = Treatment))+
   geom_vline(xintercept = c(13,28), col = 'grey30')+
   geom_hline(yintercept = 0, col = 'grey30')+
   scale_colour_manual(values = c(Control = "black", Predator = "red"))+
-  scale_linetype_manual(values = c(Acute = "dotted", Acclim = "solid"))+
-  labs(y =expression(paste("Somatic Growth Rate")))+
+  scale_linetype_manual(values = c(Acute = "dashed", Acclim = "solid"))+
+  labs(y ="SGR (mm/day)")+
   ylim(-0.12,0.12)+
+  facet_grid(~Experiment)+
   theme_bw(base_size = 15)
+
+p2 <- ggplot(pd2, aes(x = Temperature, y = fixed_pred2, 
+                      colour = Experiment, 
+                      group = Experiment))+
+  geom_line(size = 2, alpha = 0.3)+
+  geom_line(size = 2, data = pd, aes(x = Temperature, y = fixed_pred, 
+                                     colour = Experiment, group = Experiment))+
+  geom_vline(xintercept = c(13,28), col = 'grey30')+
+  geom_hline(yintercept = 0, col = 'grey30')+
+  scale_colour_manual(values = c(Acclim = "green", Acute = "blue"))+
+  labs(y ="SGR (mm/day)")+
+  ylim(-0.12,0.12)+
+  facet_grid(~Treatment)+
+  theme_bw(base_size = 15)
+
+gridExtra::grid.arrange(p1,p2)
 
 ## AUC and Popt/Topt analysis ----
 
