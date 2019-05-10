@@ -33,20 +33,20 @@ glimpse(Fec_scale)
 # USING Fec OR Fec/Body Size for Reproductive Effort ----
 # Reproductive Effort gives substantial three way result
 
-ggplot(Fec_scale, aes(x = Temperature, y = Fec/Body, 
+ggplot(Fec_scale, aes(x = Temperature, y = Effort, 
                      colour = Treatment))+
   geom_point()+
   geom_smooth(method = lm, formula = y ~ poly(x,2), se = FALSE)+
   facet_grid(Experiment ~ Clone)+
   scale_colour_manual(values = c(Control = "black", Predator = "red"))+
-  ylab(expression(paste("Fecundity (", Sigma, "3-clutches)")))+
+  ylab(expression(paste("Fecundity (", Sigma, "2-clutches)")))+
   theme_bw()
 
 # The model ----
 
 # Effect of Temp varies by treatment and by Experiment
 # Effect of Treatment does not vary by Experiment (Predation effect is invariant)
-mod <- lmer(Fec/Body ~ (poly(Temperature,2)+Treatment+Experiment)^3 + 
+mod <- lmer(Effort ~ (poly(Temperature,2)+Treatment+Experiment)^3 + 
               (poly(Temperature,2)|Clone), 
             data = Fec_scale, control = lmerControl(optimizer = "Nelder_Mead"))
 
@@ -95,7 +95,7 @@ ggplot(pd, aes(x = Temperature, y = fixed_pred))+
   # geom_jitter(data = Ro, aes(x = Temperature, y = Ro.B2, colour = Clone), alpha = 0.3,
   #             height = 0, width = 1)+
   facet_grid(Experiment ~ Treatment)+
-  labs(y =expression(paste("Fecundity (", Sigma, "3-clutches)")))+
+  labs(y =expression(paste("Fecundity (", Sigma, "2-clutches)")))+
   theme_bw(base_size = 15)+
   theme(legend.position = "none")
 
