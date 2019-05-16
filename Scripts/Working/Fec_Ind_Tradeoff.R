@@ -124,10 +124,10 @@ ggplot(plotThese, aes(x = Induction, y = predictedFec,
 
 # lmer model ---------------------------------------------------------
 modTradeOff <- lmer(Fec ~ maxInduction*Temperature*Experiment+
-                      (maxInduction|Clone), data = fec_ind,
+                      (maxInduction|Clone), data = fec_ind, na.action = 'na.omit',
                     control = lmerControl(optimizer = "Nelder_Mead"))
 modTradeOff2 <- lmer(Fec ~ (maxInduction+Temperature+Experiment)^2+
-                      (maxInduction|Clone), data = fec_ind,
+                      (maxInduction|Clone), data = fec_ind,na.action = 'na.omit',
                     control = lmerControl(optimizer = "Nelder_Mead"))
 
 Anova(modTradeOff, test ="F")
@@ -167,3 +167,22 @@ lmerFixed <- ggplot(pd, aes(x = maxInduction, y = fixed_pred,
 
 
 lmerFixed
+
+# MCMCglmm model --------------------------------
+# 4 terms in the random effect (intercept + 3)
+prior <- list(R = list(V = 1, n = 0.002),
+              G = list(G1 = list(V = diag(1), n = 1)))
+
+modBay <- MCMCglmm(Fec ~ maxInduction*Temperature*Experiment,
+                   random = ~us(maxInduction):Clone, 
+                   family = 'gaussian', prior = prior, pr = TRUE,
+                   data = data.frame(na.omit(fec_ind)))
+
+modBay2 <- MCMCglmm(Fec ~ (maxInduction+Temperature+Experiment)^2,
+                    random = ~us(maxInduction):Clone, 
+                    family = 'gaussian', prior = prior, pr = TRUE,
+                    data = data.frame(na.omit(fec_ind)))
+
+summary(modBay)$sol
+modBay$DIC-modBay2$DIC
+

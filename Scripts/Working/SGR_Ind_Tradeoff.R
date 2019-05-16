@@ -186,7 +186,7 @@ ggplot(scaleDat, aes(x = maxInduction, y = Growth0, colour = factor(Temperature)
 
 # lmer model ---------------------------------------------------------
 modTradeOff <- lmer(Growth0 ~ maxInduction*Temperature*Experiment+
-                       (maxInduction|Clone), data = pred_only,
+                       (maxInduction|Clone), data = pred_only, na.action='na.omit',
                     control = lmerControl(optimizer = "Nelder_Mead"))
 
 Anova(modTradeOff, test ="F")
@@ -254,13 +254,20 @@ gridExtra::grid.arrange(lmerFixed, lmerClone, ncol = 1)
 # MCMCglmm model --------------------------------
 # 4 terms in the random effect (intercept + 3)
 prior <- list(R = list(V = 1, n = 0.002),
-              G = list(G1 = list(V = diag(4), n = 4)))
+              G = list(G1 = list(V = diag(1), n = 1)))
 
-modBay <- MCMCglmm(maxInduction ~ Growth0*Temperature*Experiment,
-                   random = ~us(1+Growth0+Temperature+Experiment):Clone, 
+modBay <- MCMCglmm(Growth0 ~ maxInduction*Temperature*Experiment,
+                   random = ~us(maxInduction):Clone, 
                    family = 'gaussian', prior = prior, pr = TRUE,
                    data = scaleDat)
+
+modBay2 <- MCMCglmm(Growth0 ~ (maxInduction+Temperature+Experiment)^2,
+                   random = ~us(maxInduction):Clone, 
+                   family = 'gaussian', prior = prior, pr = TRUE,
+                   data = scaleDat)
+
 summary(modBay)$sol
+modBay$DIC-modBay2$DIC
 
 # check fits vs. raw
 xyplot(maxInduction + predict(modBay, marginal = NULL) ~
