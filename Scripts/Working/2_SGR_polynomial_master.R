@@ -68,7 +68,7 @@ ggplot(scaleDat, aes(x = Temperature, y = Growth0, group = Experiment))+
 
 mod <- lmer(Growth0 ~ poly(Temperature,2) * Treatment * Experiment +
               (poly(Temperature,2)|Clone),
-            data = scaleDat)
+            data = scaleDat, control = lmerControl(optimizer = "Nelder_Mead"))
 
 summary(mod)
 Anova(mod, test.statistic = "F")
@@ -229,6 +229,9 @@ mod_Topts <- lm(Topt ~ Treatment * Experiment, data = P_T_opts)
 mod_Popts <- lm(Popt ~ Treatment * Experiment, data = P_T_opts)
 heplots::etasq(mod_Topts, anova = TRUE) # small effect sizes on Topt
 heplots::etasq(mod_Popts, anova = TRUE) # small effect sizes Performance
+
+sjstats::omega_sq(mod_Topts)
+sjstats::omega_sq(mod_Popts)
 
 # Theory Plot
 ggplot(pd, aes(x = Temperature, y = fixed_pred, 

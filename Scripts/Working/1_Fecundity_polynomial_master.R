@@ -53,6 +53,13 @@ mod <- lmer(Effort ~ (poly(Temperature,2)+Treatment+Experiment)^3 +
 summary(mod)  
 Anova(mod, test = "F")
 
+# bayesian via brms
+b_mod <- brm(Effort ~ (poly(Temperature,2)+Treatment+Experiment)^3 + 
+      (poly(Temperature,2)|Clone), data = Fec_scale)
+
+summary(b_mod)
+plot(marginal_effects(b_mod))
+
 # Plot the results ----
 
 # showing variation among clones
@@ -204,6 +211,9 @@ mod_Topts <- lm(Topt ~ Treatment * Experiment, data = P_T_opts)
 mod_Popts <- lm(Popt ~ Treatment * Experiment, data = P_T_opts)
 heplots::etasq(mod_Topts, anova = TRUE) # small effect sizes on Topt
 heplots::etasq(mod_Popts, anova = TRUE) # substantial effect sizes Performance
+
+sjstats::omega_sq(mod_Topts)
+sjstats::omega_sq(mod_Popts)
 
 # Four Traits: Popt, Topt, Min, Max ----
 
