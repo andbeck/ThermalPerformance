@@ -3,6 +3,7 @@ library(lme4)
 library(car)
 library(heplots)
 library(MESS)
+library(lmerTest)
 
 # data
 SGR_Ind <- read_csv("./Data/growthInd_HC0.csv")
@@ -132,6 +133,14 @@ modTradeOff2 <- lmer(Fec ~ (maxInduction+Temperature+Experiment)^2+
 
 Anova(modTradeOff, test ="F")
 anova(modTradeOff, modTradeOff2, test = "Chisq")
+
+# use lmerTest model
+mod3 <- lmerTest::lmer(Fec ~ maxInduction*Temperature*Experiment+
+                         (maxInduction|Clone), data = fec_ind, na.action = 'na.omit',
+                       control = lmerControl(optimizer = "Nelder_Mead"))
+
+anova(mod3, type = "II")
+
 
 # prep plot lmer  Result 
 
