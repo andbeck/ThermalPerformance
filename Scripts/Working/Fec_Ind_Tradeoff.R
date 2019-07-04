@@ -195,3 +195,43 @@ modBay2 <- MCMCglmm(Fec ~ (maxInduction+Temperature+Experiment)^2,
 summary(modBay)$sol
 modBay$DIC-modBay2$DIC
 
+## Fecundity Plasticity vs. Morphology ----
+# trying to get the change in effort plotted against the induced morphology
+# do clones that are more plastic in reproduction have lower morphology
+
+AccCon <- Fec_scale %>% 
+  filter(Treatment == "Control", Experiment == "Acclim") %>% 
+  select(Effort) %>% 
+  ungroup() %>% 
+  select(-ID)
+
+AccPred <- Fec_scale %>% 
+  filter(Treatment == "Predator", Experiment == "Acclim") %>% 
+  select(Effort) %>% 
+  rename(EffortP = Effort) %>% 
+  ungroup() %>% 
+  select(-ID)
+
+AccPredMorph <- scaleInd_Pred %>% 
+  filter(Experiment == "Acclim")
+
+AccCon$ID
+AccPred$ID
+
+out <- full_join(AccCon, AccPred, by = c("Clone","Temperature")) %>% 
+  mutate(deltaEffort = Effort - EffortP)
+
+out2 <- full_join(out, AccPredMorph, by = c("Clone", "Temperature"))
+
+outPlot <- out2 %>% 
+  group_by(Clone, Temperature) %>% 
+  summarise(
+    meanDE = mean(deltaEffort, na.rm = TRUE),
+    meanInd = mean(maxInduction, na.rm = TRUE)
+  )
+
+# WHAT do we expect the plasticity to be?  ±?
+ggplot(outPlot, aes(x = meanInd, y = meanDE))+
+  geom_point()+
+  geom_smooth(method = lm, se = FALSE)+
+  theme_bw(base_size = 15)
