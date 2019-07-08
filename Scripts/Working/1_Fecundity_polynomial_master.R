@@ -52,7 +52,8 @@ mod <- lmer(Effort ~ (poly(Temperature,2)+Treatment+Experiment)^3 +
 
 summary(mod)  
 Anova(mod, test = "F")
-
+lmerTest::ranova(mod)
+lmerTest::ranova(mod, reduce.terms = FALSE)
 # bayesian via brms
 b_mod <- brm(Effort ~ (poly(Temperature,2)+Treatment+Experiment)^3 + 
       (poly(Temperature,2)|Clone), data = Fec_scale)

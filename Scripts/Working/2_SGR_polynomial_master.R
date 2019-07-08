@@ -72,6 +72,7 @@ mod <- lmer(Growth0 ~ poly(Temperature,2) * Treatment * Experiment +
 
 summary(mod)
 Anova(mod, test.statistic = "F")
+lmerTest::ranova(mod, reduce.terms = FALSE)
 
 # Plot the results ----
 
