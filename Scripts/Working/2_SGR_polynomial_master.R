@@ -46,6 +46,8 @@ scaleDat %>%
   summarise(count = sum(!is.na(Growth0))) %>% 
   filter(count == 1)
 
+#write_csv(scaleDat, path = "~/Desktop/SomaticGrowthData.csv")
+
 # first plot of scaled data
 ggplot(scaleDat, aes(x = Temperature, y = Growth0, 
                      colour = Treatment))+
@@ -117,6 +119,7 @@ ggplot(pd, aes(x = Temperature, y = fixed_pred))+
   facet_grid(Experiment ~ Treatment)+
   labs(y = "Somatic Growth Rate (mm/day)", size = 1)+
   theme_bw(base_size = 15)+
+  ggtitle("Figure 2")+
   theme(legend.position = "none")
 
 # align with theory picture (uses wider range of the Temperatures)
@@ -131,6 +134,7 @@ p1 <- ggplot(pd2, aes(x = Temperature, y = fixed_pred2, colour = Treatment))+
   labs(y ="SGR (mm/day)")+
   ylim(-0.12,0.12)+
   facet_grid(~Experiment)+
+  ggtitle("Figure 3a")+
   theme_bw(base_size = 15)
 
 p2 <- ggplot(pd2, aes(x = Temperature, y = fixed_pred2, 
@@ -145,6 +149,7 @@ p2 <- ggplot(pd2, aes(x = Temperature, y = fixed_pred2,
   labs(y ="SGR (mm/day)")+
   ylim(-0.12,0.12)+
   facet_grid(~Treatment)+
+  ggtitle("Figure 3b")+
   theme_bw(base_size = 15)
 
 gridExtra::grid.arrange(p1,p2)

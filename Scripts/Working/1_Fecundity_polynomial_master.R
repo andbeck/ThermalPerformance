@@ -28,7 +28,7 @@ source("./Scripts/Working/MakeFecData_APB.R")
 
 # look at the data
 glimpse(Fec_scale)
-
+#write_csv(Fec_scale, path = "~/Desktop/FecundityAnalysisData.csv")
 
 # USING Fec OR Fec/Body Size for Reproductive Effort ----
 # Reproductive Effort gives substantial three way result
@@ -54,6 +54,7 @@ summary(mod)
 Anova(mod, test = "F")
 lmerTest::ranova(mod)
 lmerTest::ranova(mod, reduce.terms = FALSE)
+
 # bayesian via brms
 b_mod <- brm(Effort ~ (poly(Temperature,2)+Treatment+Experiment)^3 + 
       (poly(Temperature,2)|Clone), data = Fec_scale)
@@ -105,6 +106,7 @@ ggplot(pd, aes(x = Temperature, y = fixed_pred))+
   facet_grid(Experiment ~ Treatment)+
   labs(y =expression(paste("Fecundity (", Sigma, "2-clutches)")))+
   theme_bw(base_size = 15)+
+  ggtitle("Figure 4")+
   theme(legend.position = "none")
 
 
@@ -121,6 +123,7 @@ p1 <- ggplot(pd2, aes(x = Temperature, y = fixed_pred2, colour = Treatment))+
   labs(y =expression(paste("Fecundity (", Sigma, "2-clutches)")))+
   ylim(-1,30)+
   facet_grid(~Experiment)+
+  ggtitle("Figure 5a")+
   theme_bw(base_size = 15)
 
 p2 <- ggplot(pd2, aes(x = Temperature, y = fixed_pred2, 
@@ -135,6 +138,7 @@ p2 <- ggplot(pd2, aes(x = Temperature, y = fixed_pred2,
   labs(y = expression(paste("Fecundity (", Sigma, "2-clutches)")))+
   ylim(-1,30)+
   facet_grid(~Treatment)+
+  ggtitle("Figure 5b")+
   theme_bw(base_size = 15)
 
 gridExtra::grid.arrange(p1,p2)
