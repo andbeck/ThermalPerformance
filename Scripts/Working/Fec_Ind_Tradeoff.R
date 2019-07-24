@@ -169,13 +169,27 @@ lmerFixed <- ggplot(pd, aes(x = maxInduction, y = fixed_pred,
   scale_colour_brewer(palette = "RdYlBu", direction = -1)+
   #scale_y_continuous(breaks = seq(from = -2, to = 2, by = 0.5))+
   facet_grid(Experiment ~ Temperature)+
-  labs(y = "Fec", x = "IND")+
+  labs(y = "Reproductive Effort", x = "Max Induction")+
   theme_bw(base_size = 15)+
   guides(color=guide_legend(title="Temp C˚"))+
   theme(legend.position = "top")
 
 
 lmerFixed
+
+lmerClone <- ggplot(pd, aes(x = maxInduction, y = clone_pred, 
+                            colour = factor(Temperature), 
+                            group = Temperature))+
+  geom_line(size = 2)+
+  scale_colour_brewer(palette = "RdYlBu", direction = -1)+
+  facet_grid(factor(Experiment, levels = c("Acclim","Acute")) ~ Clone)+
+  labs(y = "Reproductive Effort", x = "Max Induction")+
+  theme_bw(base_size = 10)+
+  theme(legend.position = "none")
+
+lmerClone
+
+gridExtra::grid.arrange(lmerFixed, lmerClone, ncol = 1)
 
 # MCMCglmm model --------------------------------
 # 4 terms in the random effect (intercept + 3)
@@ -235,3 +249,21 @@ ggplot(outPlot, aes(x = meanInd, y = meanDE))+
   geom_point()+
   geom_smooth(method = lm, se = FALSE)+
   theme_bw(base_size = 15)
+
+####
+
+##Build Stearns like picture with 13 vs. 28 C ----
+stearns <- fec_ind %>% filter(Temperature == 13|Temperature == 28)
+glimpse(stearns)
+
+ggplot(stearns, aes(x = maxInduction, y = Effort, colour = factor(Temperature)))+
+  geom_point()+
+  geom_smooth(method = 'lm', se = FALSE)+
+  facet_grid(~Experiment)
+
+stearns_predictions <- pd %>% filter(Temperature == 13|Temperature == 28)
+glimpse(stearns_predictions)
+
+ggplot(stearns_predictions, aes(x = maxInduction, y = fixed_pred, colour = Experiment))+
+  geom_smooth(method = 'lm', se = FALSE)+
+  facet_grid(Experiment~Temperature)
