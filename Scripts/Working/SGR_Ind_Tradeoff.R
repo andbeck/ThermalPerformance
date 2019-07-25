@@ -324,6 +324,8 @@ gridExtra::grid.arrange(CEff, TEff, ncol = 2)
 
 
 ##Build Stearns like picture with 13 vs. 28 C ----
+
+# get the two temps in the raw data
 stearns <- pred_only %>% filter(Temperature == 13|Temperature == 28)
 glimpse(stearns)
 
@@ -332,6 +334,15 @@ ggplot(stearns, aes(x = maxInduction, y = Growth0, colour = factor(Temperature))
   geom_smooth(method = 'lm', se = FALSE)+
   facet_grid(~Experiment)
 
+# use clone means
+stearns_cm <- G0 %>% filter(Temperature == 13|Temperature == 28)
+
+ggplot(stearns_cm, aes(x = meanInd, y = meanSGR, colour = Clone, group = Clone))+
+  geom_point(aes(shape = Temperature), size = 3)+
+  geom_line()+
+  facet_grid(. ~ Experiment)
+
+# use predictions
 stearns_predictions <- pd %>% filter(Temperature == 13|Temperature == 28)
 glimpse(stearns_predictions)
 
@@ -339,9 +350,11 @@ ggplot(stearns_predictions, aes(x = maxInduction, y = fixed_pred, colour = Exper
   geom_line()+
   geom_smooth(method = 'lm', se = FALSE)+
   ylab("Somatic Growth Rate (mm/day)")+
-  
   facet_grid(Experiment~Temperature)
 
-ggplot(stearns_predictions, aes(x = maxInduction, y = clone_pred, colour = factor(Temperature)), alpha = 0.5)+
+ggplot(stearns_predictions, aes(x = maxInduction, 
+                                y = clone_pred, 
+                                colour = factor(Temperature)), alpha = 0.5)+
   geom_line()+
   facet_grid(Experiment~Clone)
+
